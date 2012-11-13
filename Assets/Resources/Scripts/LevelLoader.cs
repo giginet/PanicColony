@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using Pathfinding;
 
 public class LevelLoader : MonoBehaviour {
     public int WIDTH = 10;
@@ -8,7 +9,7 @@ public class LevelLoader : MonoBehaviour {
     private Level level;
 
     // Use this for initialization
-    void Start () {
+    void Awake () {
         this.level = this.CreateLevel (0);
         this.CreateRooms();
     }
@@ -20,7 +21,7 @@ public class LevelLoader : MonoBehaviour {
     private Level CreateLevel (int levelNo) {
         Dictionary<Vector2, char> map = new Dictionary<Vector2, char> ();
         TextAsset asset = (TextAsset)Resources.Load ("Levels/Level" + levelNo.ToString (), typeof(TextAsset));
-        GameObject levelObject = GameObject.CreatePrimitive (PrimitiveType.Cube);
+        GameObject levelObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
         levelObject.renderer.enabled = false;
         levelObject.name = "Level" + levelNo;
         string[] lines = asset.text.Split ('\n');
@@ -63,6 +64,12 @@ public class LevelLoader : MonoBehaviour {
                 player.transform.position = position + Vector3.up;
             }
         }
+        GameObject aStar = GameObject.Find("A*");
+        AstarPath path = aStar.GetComponent<AstarPath>();
+        PointGraph graph = path.graphs[0] as PointGraph;
+        //graph.root = levelObject.transform;
+        graph.ScanGraph();
+        Debug.Log (graph.nodes.Length);
         return level;
     }
     
