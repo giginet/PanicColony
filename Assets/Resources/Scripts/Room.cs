@@ -18,4 +18,8 @@ public class Room {
         Vector2 p = new Vector2(x, y);
         this.floors.Add(p);
     }
+    
+    public List<Vector2> GetFloors () {
+        return this.floors;
+    }
 }
