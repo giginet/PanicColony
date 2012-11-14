@@ -80,4 +80,17 @@ public class Level {
         }
         return false;
     }
+    
+    public List<GameObject> GetNeighbors (Vector2 position, bool manhattan) {
+        List<GameObject> neighbors = new List<GameObject>();
+        int length = manhattan ? 4 : 8;
+        Vector2[] vectors = {position + Vector2.up, position + Vector2.right, position - Vector2.up, position - Vector2.right, 
+            position + Vector2.one, position - Vector2.one, position + Vector2.up - Vector2.right, position - Vector2.up + Vector2.right
+        };
+        for (int i = 0; i < length; ++i) {
+            GameObject obj = this.GetObject(vectors[i]);
+            if (obj != null) neighbors.Add(obj);
+        }
+        return neighbors;
+    }
 }

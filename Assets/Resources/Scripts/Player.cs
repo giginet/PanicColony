@@ -19,5 +19,15 @@ public class Player : MonoBehaviour {
                 bomb = null;
             }
         }
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Vector3 position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit, 100)) {
+            LineRenderer renderer = this.GetComponent<LineRenderer>();
+            renderer.SetVertexCount(2);
+            renderer.SetPosition(0, this.transform.position);
+            renderer.SetPosition(1, hit.point);
+        }   
     }
 }
+

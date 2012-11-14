@@ -115,12 +115,22 @@ public class LevelManager : MonoBehaviour {
     
     public void DestroyRoom (Vector3 position) {
         Vector2 p = this.PositionToMatrix (position);
-        this.DestroyRoom (this.level.GetRoom(p));
+        Room room = this.level.GetRoom(p);
+        if (room != null) {
+            this.DestroyRoom (room);
+        }
     }
     
     public void DestroyRoom(Room room) {
+
         foreach (Vector2 point in room.GetFloors()) {
             GameObject obj = this.level.GetObject(point);
+            foreach (GameObject neighbor in this.level.GetNeighbors(point, false)) {
+                if (neighbor.CompareTag("Wall")) {
+                    this.level.RemoveObject(this.PositionToMatrix(neighbor.transform.position));
+                    Destroy(neighbor);
+                }
+            }
             this.level.RemoveObject(point);
             Destroy(obj);
         }
