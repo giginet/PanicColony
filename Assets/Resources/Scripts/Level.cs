@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class Level {
     private Dictionary<Vector2, GameObject> map;
     private List<Room> rooms;
+    private List<Route> routes;
     private int level = 0;
     private int width = 0;
     private int height = 0;    
@@ -14,6 +15,7 @@ public class Level {
         this.width = width;
         this.height = height;
         this.rooms = new List<Room>();
+        this.routes = new List<Route>();
     }
 
     public GameObject GetObject (Vector2 p) {
@@ -52,6 +54,10 @@ public class Level {
         this.rooms.Add(room);
     }
     
+    public void AddRoute (Route route) {
+        this.routes.Add(route);
+    }
+    
     public Room GetRoom (Vector2 position) {
         foreach (Room room in this.rooms) {
             if (room.ContainsFloor((int)position.x, (int)position.y) ) {
@@ -61,20 +67,52 @@ public class Level {
         return null;
     }
     
+    public Route GetRoute (Vector2 position) {
+        foreach (Route route in this.routes) {
+            if (route.ContainsFloor((int)position.x, (int)position.y)) {
+                return route;
+            }
+        }
+        return null;
+    }
+    
     public void RemoveRoom (Room room) {
         if (room == null) return; 
-        this.rooms.Remove(room);
+        this.rooms[this.rooms.IndexOf(room)].SetEnable(false);
     }
     
     public bool IsFloor (int x, int y) {
         GameObject obj = this.GetObject(x, y);
-        if (obj == null) return false;
-        return obj.CompareTag("Floor");
+        if (obj == null || !obj.GetComponent<Tile>()) return false;
+        return obj.GetComponent<Tile>().type == Tile.TileType.Floor;
+    }
+    
+    public bool IsRoute (int x, int y) {
+        GameObject obj = this.GetObject(x, y);
+        if (obj == null || !obj.GetComponent<Tile>()) return false;
+        return obj.GetComponent<Tile>().type == Tile.TileType.Route;
+    }
+    
+    public List<Room> GetRooms () {
+        return this.rooms;
+    }
+    
+    public List<Route> GetRoutes () {
+        return this.routes;
     }
     
     public bool ContainsInRooms (int x, int y) {
         foreach (Room room in this.rooms) {
             if ( room.ContainsFloor(x, y) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public bool ContainsInRoutes (int x, int y) {
+        foreach (Route route in this.routes) {
+            if ( route.ContainsFloor(x, y) ) {
                 return true;
             }
         }

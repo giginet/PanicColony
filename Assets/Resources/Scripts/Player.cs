@@ -19,14 +19,19 @@ public class Player : MonoBehaviour {
                 bomb = null;
             }
         }
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        Vector3 position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector3 mouse = Input.mousePosition;
+        mouse.y = Camera.main.WorldToScreenPoint(transform.position).y + 100;
+        Ray ray = Camera.main.ScreenPointToRay(mouse);
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, 100)) {
             LineRenderer renderer = this.GetComponent<LineRenderer>();
             renderer.SetVertexCount(2);
             renderer.SetPosition(0, this.transform.position);
-            renderer.SetPosition(1, hit.point);
+            Vector3 target = hit.point;
+            renderer.SetPosition(1, target);
+            //Vector3 sub = hit.point - transform.position;
+            //sub.y = transform.position.y;
+            //transform.forward = sub;
         }   
     }
 }

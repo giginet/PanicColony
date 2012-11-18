@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class Room {
-    private List<Vector2> floors;
-
+    protected List<Vector2> floors;
+    protected bool enable;
+    
     public Room () {
         this.floors = new List<Vector2>();
     }
@@ -21,5 +22,13 @@ public class Room {
     
     public List<Vector2> GetFloors () {
         return this.floors;
+    }
+    
+    public bool GetEnable () {
+        return this.enable;
+    }
+    
+    public void SetEnable (bool enable) {
+        this.enable = enable;
     }
 }
