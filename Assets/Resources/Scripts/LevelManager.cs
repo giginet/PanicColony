@@ -142,12 +142,13 @@ public class LevelManager : MonoBehaviour {
         int[] xs = {x + 1, x - 1, x, x};
         int[] ys = {y, y, y + 1, y - 1};
         for (int i = 0; i < 4; ++i) {
+            Vector2 v = new Vector2(xs[i], ys[i]);
             if (this.level.IsRoute(xs[i], ys[i]) && !this.level.ContainsInRoutes(xs[i], ys[i])) { 
                 this.AddNeighborRoute(route, xs[i], ys[i]);
             } else if (this.level.IsFloor(xs[i], ys[i])) {
-                Room room = this.level.GetRoom(new Vector2(xs[i], ys[i]));
+                Room room = this.level.GetRoom(v);
                 if (room != null) {
-                    route.AddRoom(room);
+                    route.AddRoom(new Vector2(x, y), room);
                 }
             }
         }
@@ -182,10 +183,24 @@ public class LevelManager : MonoBehaviour {
                 obj.rigidbody.isKinematic = false;
                 obj.rigidbody.useGravity = true;
             }
-            //Destroy(obj);
         }
         this.UpdatePath(room); 
         this.level.RemoveRoom(room);
+        foreach (Route route in this.level.GetRoutes()) {
+            foreach (Vector2 pos in route.GetRooms().Keys) {
+                Room r = route.GetRooms()[pos];
+                if (r == room) {
+                    GameObject shutterPrefab = (GameObject)Resources.Load("Prefabs/shutterPrefab", typeof(GameObject)); 
+                    GameObject routeTile = this.level.GetObject(pos);
+                    
+                    GameObject shutter = (GameObject)Instantiate(shutterPrefab, routeTile.transform.position, Quaternion.identity);
+                    shutter.transform.parent = routeTile.transform;
+                    shutter.transform.localPosition = Vector3.up * 2;
+                    shutter.transform.localRotation = Quaternion.Euler(0, 0, 0);
+                    Debug.Log("AddShutter");
+                }
+            }
+        }
     }
     
     private void UpdatePath (Room room) {

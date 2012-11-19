@@ -4,18 +4,18 @@ using System.Collections.Generic;
 
 public class Route : Room {
  
-    List<Room> rooms;
+    Dictionary<Vector2, Room> rooms;
     
     public Route () {
         this.floors = new List<Vector2>();
-        this.rooms = new List<Room>();
+        this.rooms = new Dictionary<Vector2, Room>();
     }
     
-    public void AddRoom (Room room) {
-        this.rooms.Add(room);
+    public void AddRoom (Vector2 position, Room room) {
+        this.rooms.Add(position, room);
     }
     
-    public List<Room> GetRooms () {
+    public Dictionary<Vector2, Room> GetRooms () {
         return this.rooms;
     }
 }
