@@ -18,6 +18,6 @@ public class Bomb : MonoBehaviour {
         Instantiate(explosionPrefab, this.transform.position, Quaternion.identity);
         Destroy(gameObject);
         GameObject manager = GameObject.FindWithTag("LevelManager");
-        manager.SendMessage("DestroyRoom", this.transform.position);
+        manager.SendMessage("BombRoom", this.transform.position);
     }
 }

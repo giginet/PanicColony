@@ -13,7 +13,9 @@ public class LevelManager : MonoBehaviour {
         this.level = this.CreateLevel (0);
         this.CreateRooms();
         this.CreateRoutes();
-        Debug.Log ("Rooms = " + this.level.GetRooms().Count.ToString() + " Routes = " + this.level.GetRoutes().Count.ToString());
+        foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
+            this.level.AddStartPoint(PositionToMatrix(player.transform.position));
+        }
     }
     
     // Update is called once per frame
@@ -65,8 +67,7 @@ public class LevelManager : MonoBehaviour {
             } else if (c == '#') {
                 GameObject wallPrefab = null;
                 GameObject wall = null;
-                Vector2 up = new Vector2(x, y - 1);
-                Vector2 down = new Vector2(x, y - 1);
+                Vector2 up = new Vector2(x - 1, y);
                 Vector2 left = new Vector2(x - 1, y);
                 Vector2 right = new Vector2(x + 1, y);
                 if ((map.ContainsKey(left) && map[left] == '.') ^
@@ -84,7 +85,7 @@ public class LevelManager : MonoBehaviour {
                 level.SetObject(p, wall);
             } else if (c == 'S') {
                 GameObject player = GameObject.FindWithTag ("Player");
-                player.transform.position = position + Vector3.up;
+                player.transform.position = position + Vector3.up * 5;
             } else if (c == '*') {
                 GameObject enemyPrefab = (GameObject)Resources.Load ("Prefabs/enemyPrefab", typeof(GameObject));
                 GameObject enemy = (GameObject)Instantiate (enemyPrefab, position + Vector3.up * 1, Quaternion.identity);
@@ -143,6 +144,11 @@ public class LevelManager : MonoBehaviour {
         for (int i = 0; i < 4; ++i) {
             if (this.level.IsRoute(xs[i], ys[i]) && !this.level.ContainsInRoutes(xs[i], ys[i])) { 
                 this.AddNeighborRoute(route, xs[i], ys[i]);
+            } else if (this.level.IsFloor(xs[i], ys[i])) {
+                Room room = this.level.GetRoom(new Vector2(xs[i], ys[i]));
+                if (room != null) {
+                    route.AddRoom(room);
+                }
             }
         }
     }
@@ -153,11 +159,11 @@ public class LevelManager : MonoBehaviour {
         return new Vector2(Mathf.Floor(x / this.WIDTH), Mathf.Floor(-y / this.HEIGHT));
     }
     
-    public void DestroyRoom (Vector3 position) {
+    public void BombRoom (Vector3 position) {
         Vector2 p = this.PositionToMatrix (position);
-        Room room = this.level.GetRoom(p);
-        if (room != null) {
-            this.DestroyRoom (room);
+        Room bombRoom = this.level.GetRoom(p);
+        if (bombRoom != null) {
+            this.DestroyRoom (bombRoom);
         }
     }
     

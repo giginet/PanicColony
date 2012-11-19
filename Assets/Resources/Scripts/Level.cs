@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 public class Level {
     private Dictionary<Vector2, GameObject> map;
+    private List<Vector2> startPoints;
     private List<Room> rooms;
     private List<Route> routes;
     private int level = 0;
@@ -16,6 +17,7 @@ public class Level {
         this.height = height;
         this.rooms = new List<Room>();
         this.routes = new List<Route>();
+        this.startPoints = new List<Vector2>();
     }
 
     public GameObject GetObject (Vector2 p) {
@@ -56,6 +58,10 @@ public class Level {
     
     public void AddRoute (Route route) {
         this.routes.Add(route);
+    }
+    
+    public void AddStartPoint (Vector2 point) {
+        this.startPoints.Add(point);
     }
     
     public Room GetRoom (Vector2 position) {
@@ -130,5 +136,12 @@ public class Level {
             if (obj != null) neighbors.Add(obj);
         }
         return neighbors;
+    }
+    
+    public bool IsStartRoom (Room room) {
+        foreach (Vector2 p in this.startPoints) {
+            return room.ContainsFloor((int)p.x, (int)p.y);
+        }
+        return false;
     }
 }

@@ -8,11 +8,11 @@ public class Route : Room {
     
     public Route () {
         this.floors = new List<Vector2>();
-        this.rooms = new List<Room>(2);
+        this.rooms = new List<Room>();
     }
     
-    public void SetRoom (int index, Room room) {
-        this.rooms[index] = room;
+    public void AddRoom (Room room) {
+        this.rooms.Add(room);
     }
     
     public List<Room> GetRooms () {

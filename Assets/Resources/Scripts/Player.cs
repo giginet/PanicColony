@@ -25,10 +25,17 @@ public class Player : MonoBehaviour {
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, 100)) {
             LineRenderer renderer = this.GetComponent<LineRenderer>();
-            renderer.SetVertexCount(2);
-            renderer.SetPosition(0, this.transform.position);
-            Vector3 target = hit.point;
-            renderer.SetPosition(1, target);
+            if (Vector3.Distance(this.transform.position, hit.point) >= 3) {
+                renderer.enabled = true;
+                renderer.SetVertexCount(2);
+                renderer.SetPosition(0, this.transform.position);
+                Vector3 target = hit.point;
+                target.y = this.transform.position.y;
+                renderer.SetPosition(1, target);
+                this.transform.LookAt(target);
+            } else {
+                renderer.enabled = false;
+            }
             //Vector3 sub = hit.point - transform.position;
             //sub.y = transform.position.y;
             //transform.forward = sub;
