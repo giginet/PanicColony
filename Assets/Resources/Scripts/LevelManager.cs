@@ -50,6 +50,7 @@ public class LevelManager : MonoBehaviour {
             if (c != ' ' && c != '/' && c != '#') {
                 GameObject floorPrefab = (GameObject)Resources.Load ("Prefabs/floorPrefab", typeof(GameObject));
                 GameObject floor = (GameObject)Instantiate (floorPrefab, position, Quaternion.identity);
+                floor.transform.Find("light").GetComponent<Light>().enabled = x % 5 == 0 || y % 5 == 0;
                 floor.transform.parent = levelObject.transform;
                 level.SetObject(p, floor);
             }

@@ -5,11 +5,8 @@ public class Shutter : MonoBehaviour {
 
     public int range = 2;
     public float speed = 2.5f;
-    private float distance = 0.0f;
-    private GameObject shutter = null;
 
     void Start () {
-        shutter = (GameObject)this.gameObject.transform.Find("shutter").gameObject;
     }
     
     void Update () {
