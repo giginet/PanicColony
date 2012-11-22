@@ -82,7 +82,7 @@ public class Level {
         return null;
     }
     
-    public void RemoveRoom (Room room) {
+    public void DisableRoom (Room room) {
         if (room == null) return; 
         room.SetEnable(false);
     }
@@ -144,4 +144,13 @@ public class Level {
         }
         return false;
     }
+    
+    public bool IsReachFromStart () {
+        return true;
+    }
+    
+    public bool IsNeighbor (Room room0, Room room1) {
+        return true;
+    }
+    
 }

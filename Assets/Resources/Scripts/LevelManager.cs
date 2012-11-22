@@ -186,7 +186,7 @@ public class LevelManager : MonoBehaviour {
             }
         }
         this.UpdatePath(room); 
-        this.level.RemoveRoom(room);
+        this.level.DisableRoom(room);
         foreach (Route route in this.level.GetRoutes()) {
             bool bombRoute = true;
             foreach (Vector2 pos in route.GetRooms().Keys) {
@@ -204,6 +204,7 @@ public class LevelManager : MonoBehaviour {
                 }
             }
             if (bombRoute) {
+                route.SetEnable(false);
                 foreach (Vector2 point in route.GetFloors()) {
                     GameObject obj = this.level.GetObject(point);
                     if (obj) {;

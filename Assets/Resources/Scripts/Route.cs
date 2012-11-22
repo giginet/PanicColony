@@ -2,8 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class Route : Room {
- 
+public class Route : Unit { 
     Dictionary<Vector2, Room> rooms;
     
     public Route () {
