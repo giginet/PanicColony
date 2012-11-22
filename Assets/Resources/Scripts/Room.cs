@@ -4,10 +4,11 @@ using System.Collections.Generic;
 
 public class Room {
     protected List<Vector2> floors;
-    protected bool enable;
+    protected bool enable = true;
     
     public Room () {
         this.floors = new List<Vector2>();
+        this.enable = true;
     }
     
     public bool ContainsFloor (int x, int y) {
@@ -30,5 +31,13 @@ public class Room {
     
     public void SetEnable (bool enable) {
         this.enable = enable;
+    }
+    
+    public Vector2 GetCenter() {
+        Vector2 center = Vector3.zero;
+        foreach (Vector2 floor in this.floors) {
+            center += floor;
+        }
+        return center / this.floors.Count;
     }
 }

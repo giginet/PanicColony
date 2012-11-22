@@ -84,7 +84,7 @@ public class Level {
     
     public void RemoveRoom (Room room) {
         if (room == null) return; 
-        this.rooms[this.rooms.IndexOf(room)].SetEnable(false);
+        room.SetEnable(false);
     }
     
     public bool IsFloor (int x, int y) {

@@ -188,17 +188,28 @@ public class LevelManager : MonoBehaviour {
         this.UpdatePath(room); 
         this.level.RemoveRoom(room);
         foreach (Route route in this.level.GetRoutes()) {
+            bool bombRoute = true;
             foreach (Vector2 pos in route.GetRooms().Keys) {
                 Room r = route.GetRooms()[pos];
+                if (r.GetEnable()) {
+                    bombRoute = false;
+                }
                 if (r == room) {
                     GameObject shutterPrefab = (GameObject)Resources.Load("Prefabs/shutterPrefab", typeof(GameObject)); 
                     GameObject routeTile = this.level.GetObject(pos);
-                    
                     GameObject shutter = (GameObject)Instantiate(shutterPrefab, routeTile.transform.position, Quaternion.identity);
                     shutter.transform.parent = routeTile.transform;
                     shutter.transform.localPosition = Vector3.up * 2;
                     shutter.transform.localRotation = Quaternion.Euler(0, 0, 0);
-                    Debug.Log("AddShutter");
+                }
+            }
+            if (bombRoute) {
+                foreach (Vector2 point in route.GetFloors()) {
+                    GameObject obj = this.level.GetObject(point);
+                    if (obj) {;
+                        obj.rigidbody.isKinematic = false;
+                        obj.rigidbody.useGravity = true;
+                    }
                 }
             }
         }
