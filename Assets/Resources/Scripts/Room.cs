@@ -4,11 +4,21 @@ using System.Collections.Generic;
 
 public class Room : Unit {
     Dictionary<Vector2, Route> routes;
+    List<Vector2> walls;
     
     public Room () {
         this.floors = new List<Vector2>();
         this.enable = true;
         routes = new Dictionary<Vector2, Route>();
+        walls = new List<Vector2>();
+    }
+    
+    public void AddWalls(Vector2 p) {
+        this.walls.Add(p);
+    }
+    
+    public List<Vector2> GetWalls () {
+        return this.walls;
     }
     
     public void AddRoute (Vector2 position, Route route) {
@@ -31,4 +41,5 @@ public class Room : Unit {
         }
         return neighborRooms;
     }
+    
 }

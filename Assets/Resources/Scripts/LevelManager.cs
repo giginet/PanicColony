@@ -112,6 +112,14 @@ public class LevelManager : MonoBehaviour {
                         GameObject lightPrefab = (GameObject)Resources.Load ("Prefabs/roomLightPrefab", typeof(GameObject));
                         GameObject light = (GameObject)Instantiate (lightPrefab, center + Vector3.up * 10, Quaternion.identity);
                         light.transform.parent = levelObject.transform;
+                        foreach (Vector2 point in room.GetFloors()) {
+                            GameObject obj = this.level.GetObject(point);
+                            foreach (GameObject neighbor in this.level.GetNeighbors(point, false)) {
+                                if (neighbor.CompareTag("Wall")) {
+                                    room.AddWalls(this.PositionToMatrix(neighbor.transform.position));
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -186,17 +194,18 @@ public class LevelManager : MonoBehaviour {
     public void DestroyRoom (Room room) {
         foreach (Vector2 point in room.GetFloors()) {
             GameObject obj = this.level.GetObject(point);
-            foreach (GameObject neighbor in this.level.GetNeighbors(point, false)) {
-                if (neighbor.CompareTag("Wall")) {
-                    this.level.RemoveObject(this.PositionToMatrix(neighbor.transform.position));
-                    neighbor.rigidbody.isKinematic = false;
-                    neighbor.rigidbody.useGravity = true;
-                }
-            }
-            this.level.RemoveObject(point);
             if (obj) {
                 obj.rigidbody.isKinematic = false;
                 obj.rigidbody.useGravity = true;
+                this.level.RemoveObject(point);
+            }
+        }
+        foreach (Vector2 point in room.GetWalls()) {
+            GameObject obj = this.level.GetObject(point);
+            if (obj) {
+                obj.rigidbody.isKinematic = false;
+                obj.rigidbody.useGravity = true;
+                this.level.RemoveObject(point);
             }
         }
         this.level.DisableRoom(room);
