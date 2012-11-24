@@ -159,6 +159,7 @@ public class LevelManager : MonoBehaviour {
                 Room room = this.level.GetRoom(v);
                 if (room != null) {
                     route.AddRoom(new Vector2(x, y), room);
+                    room.AddRoute(v, route);
                 }
             }
         }
@@ -178,11 +179,11 @@ public class LevelManager : MonoBehaviour {
         Vector2 p = this.PositionToMatrix (position);
         Room bombRoom = this.level.GetRoom(p);
         if (bombRoom != null) {
-            this.DestroyRoom (bombRoom);
+            this.BombRoom (bombRoom);
         }
     }
     
-    public void DestroyRoom(Room room) {
+    public void DestroyRoom (Room room) {
         foreach (Vector2 point in room.GetFloors()) {
             GameObject obj = this.level.GetObject(point);
             foreach (GameObject neighbor in this.level.GetNeighbors(point, false)) {
@@ -198,8 +199,16 @@ public class LevelManager : MonoBehaviour {
                 obj.rigidbody.useGravity = true;
             }
         }
-        this.UpdatePath(room); 
         this.level.DisableRoom(room);
+    }
+    
+    public void BombRoom(Room room) {
+        this.DestroyRoom(room); 
+        foreach (Room r in this.level.GetRooms() ) {
+            if (!this.level.IsReachFromStart(r, true)) {
+               this.DestroyRoom(r); 
+            }
+        }
         foreach (Route route in this.level.GetRoutes()) {
             bool bombRoute = true;
             foreach (Vector2 pos in route.GetRooms().Keys) {
@@ -220,16 +229,17 @@ public class LevelManager : MonoBehaviour {
                 route.SetEnable(false);
                 foreach (Vector2 point in route.GetFloors()) {
                     GameObject obj = this.level.GetObject(point);
-                    if (obj) {;
+                    if (obj) {
                         obj.rigidbody.isKinematic = false;
                         obj.rigidbody.useGravity = true;
                     }
                 }
             }
-        }
+        } 
+        this.UpdatePath(); 
     }
     
-    private void UpdatePath (Room room) {
+    private void UpdatePath () {
         AstarPath path = AstarPath.active;
         PointGraph graph = path.graphs[0] as PointGraph;
         GraphUpdateObject guo = new GraphUpdateObject(new Bounds (Vector3.zero, Vector3.one * 10000)); 
@@ -240,7 +250,8 @@ public class LevelManager : MonoBehaviour {
         AstarPath.active.UpdateGraphs(guo);
         foreach (Node node in graph.nodes) {
             Vector2 p = this.PositionToMatrix(new Vector3(node.position.x / 1000, node.position.y / 1000, node.position.z / 1000));
-            if (this.level.GetRoom(p) == room) {
+            Room r = this.level.GetRoom (p);
+            if (r != null && !r.GetEnable()) {
                 guo.Apply(node);
             }
         }

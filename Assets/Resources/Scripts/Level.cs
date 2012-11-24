@@ -150,12 +150,27 @@ public class Level {
         return false;
     }
     
-    public bool IsReachFromStart () {
-        return true;
+    public bool IsReachFromStart (Room room, bool enableOnly) {
+        List<Room> neighbors = this.GetAllNeighborRooms(room, null, enableOnly);
+        foreach (Room neighbor in neighbors) {
+            if (neighbor.GetEnable() && this.IsStartRoom(neighbor)) {
+                return true;
+            }
+        }
+        return false;
     }
     
-    public bool IsNeighbor (Room room0, Room room1) {
-        return true;
+    public List<Room> GetAllNeighborRooms (Room room, List<Room> neighborRooms, bool enableOnly) {
+        if (neighborRooms == null) {
+            neighborRooms = new List<Room>();
+        }
+        neighborRooms.Add(room);
+        foreach ( Room neighbor in room.GetNeighborRooms(enableOnly) ) {
+            if ( !neighborRooms.Contains(neighbor) ) {
+                return this.GetAllNeighborRooms(neighbor, neighborRooms, enableOnly);
+            }
+        }
+        return neighborRooms;
     }
     
 }
