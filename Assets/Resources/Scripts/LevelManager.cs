@@ -183,6 +183,17 @@ public class LevelManager : MonoBehaviour {
         return new Vector3 (matrix.x * WIDTH, 0, -matrix.y * HEIGHT);
     }
     
+    private void DestroyTile (Vector2 point, bool rigidbody) {
+        GameObject obj = this.level.GetObject(point);
+        if (rigidbody && obj) {
+            obj.rigidbody.isKinematic = false;
+            obj.rigidbody.useGravity = true;
+        } else if (obj){
+            Destroy(obj);
+        }
+        this.level.RemoveObject(point);
+    }
+    
     public void BombRoom (Vector3 position) {
         Vector2 p = this.PositionToMatrix (position);
         Room bombRoom = this.level.GetRoom(p);
@@ -191,22 +202,23 @@ public class LevelManager : MonoBehaviour {
         }
     }
     
-    public void DestroyRoom (Room room) {
-        foreach (Vector2 point in room.GetFloors()) {
-            GameObject obj = this.level.GetObject(point);
-            if (obj) {
-                obj.rigidbody.isKinematic = false;
-                obj.rigidbody.useGravity = true;
-                this.level.RemoveObject(point);
+    private bool IsExistPlayer (Unit unit) {
+        foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
+            Vector2 v = this.PositionToMatrix(player.transform.position);
+            if (unit.ContainsFloor((int)v.x, (int)v.y)) {
+                return true;
             }
         }
+        return false;
+    }
+    
+    public void DestroyRoom (Room room) {
+        bool rigidbody = this.IsExistPlayer(room); 
+        foreach (Vector2 point in room.GetFloors()) {
+            this.DestroyTile(point, rigidbody);
+        }
         foreach (Vector2 point in room.GetWalls()) {
-            GameObject obj = this.level.GetObject(point);
-            if (obj) {
-                obj.rigidbody.isKinematic = false;
-                obj.rigidbody.useGravity = true;
-                this.level.RemoveObject(point);
-            }
+            this.DestroyTile(point, rigidbody);
         }
         this.level.DisableRoom(room);
     }
@@ -236,12 +248,9 @@ public class LevelManager : MonoBehaviour {
             }
             if (bombRoute) {
                 route.SetEnable(false);
+                bool rigidbody = this.IsExistPlayer(route);
                 foreach (Vector2 point in route.GetFloors()) {
-                    GameObject obj = this.level.GetObject(point);
-                    if (obj) {
-                        obj.rigidbody.isKinematic = false;
-                        obj.rigidbody.useGravity = true;
-                    }
+                    this.DestroyTile(point, rigidbody); 
                 }
             }
         } 
