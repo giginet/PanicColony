@@ -10,7 +10,6 @@ public class LevelManager : MonoBehaviour {
     private GameObject levelObject = null;
     private Level level;
 
-    // Use this for initialization
     void Awake () {
         this.level = this.CreateLevel (this.initialLevel);
         this.CreateRooms();
@@ -20,10 +19,15 @@ public class LevelManager : MonoBehaviour {
         }
     }
     
-    // Update is called once per frame
     void Update () {
     }
-    
+   
+    /**
+     * @brief Create level parse from file.
+     * 
+     * @param int levelNo
+     * @return Level
+     **/
     private Level CreateLevel (int levelNo) {
         Dictionary<Vector2, char> map = new Dictionary<Vector2, char> ();
         TextAsset asset = (TextAsset)Resources.Load ("Levels/Level" + levelNo.ToString (), typeof(TextAsset));
@@ -221,6 +225,7 @@ public class LevelManager : MonoBehaviour {
             this.DestroyTile(point, rigidbody);
         }
         this.level.DisableRoom(room);
+        this.AddExplosion(room);
     }
     
     public void BombRoom(Room room) {
@@ -252,6 +257,7 @@ public class LevelManager : MonoBehaviour {
                 foreach (Vector2 point in route.GetFloors()) {
                     this.DestroyTile(point, rigidbody); 
                 }
+                this.AddExplosion(route);
             }
         } 
         this.UpdatePath(); 
@@ -273,5 +279,10 @@ public class LevelManager : MonoBehaviour {
                 guo.Apply(node);
             }
         }
+    }
+    
+    private void AddExplosion (Unit unit) {
+        GameObject explosionPrefab = (GameObject)Resources.Load("Prefabs/bombExplosionPrefab");
+        Instantiate(explosionPrefab, this.MatrixToPosition(unit.GetCenter()), Quaternion.identity);
     }
 }

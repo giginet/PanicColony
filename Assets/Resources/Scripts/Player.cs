@@ -10,7 +10,7 @@ public class Player : MonoBehaviour {
     }
     
     void Update () {
-        if (Input.GetKeyDown(KeyCode.Z) ) {
+        if (Input.GetButtonDown("Bomb") ) {
             if (bomb == null) {
                 // place Bomb
                 GameObject bombPrefab = (GameObject)Resources.Load("Prefabs/bombPrefab");
