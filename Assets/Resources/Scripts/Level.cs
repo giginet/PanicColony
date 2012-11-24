@@ -64,6 +64,11 @@ public class Level {
         this.startPoints.Add(point);
     }
     
+    public List<Room> GetStartRooms () {
+        List<Room> startRooms = new List<Room>();
+        return startRooms;
+    }
+    
     public Room GetRoom (Vector2 position) {
         foreach (Room room in this.rooms) {
             if (room.ContainsFloor((int)position.x, (int)position.y) ) {

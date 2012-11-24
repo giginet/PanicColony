@@ -6,11 +6,13 @@ using Pathfinding;
 public class LevelManager : MonoBehaviour {
     public int WIDTH = 10;
     public int HEIGHT = 10;
+    public int initialLevel = 0;
+    private GameObject levelObject = null;
     private Level level;
 
     // Use this for initialization
     void Awake () {
-        this.level = this.CreateLevel (0);
+        this.level = this.CreateLevel (this.initialLevel);
         this.CreateRooms();
         this.CreateRoutes();
         foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
@@ -25,7 +27,7 @@ public class LevelManager : MonoBehaviour {
     private Level CreateLevel (int levelNo) {
         Dictionary<Vector2, char> map = new Dictionary<Vector2, char> ();
         TextAsset asset = (TextAsset)Resources.Load ("Levels/Level" + levelNo.ToString (), typeof(TextAsset));
-        GameObject levelObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        levelObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
         levelObject.renderer.enabled = false;
         levelObject.name = "Level" + levelNo;
         string[] lines = asset.text.Split ('\n');
@@ -42,7 +44,7 @@ public class LevelManager : MonoBehaviour {
         }
         Level level = new Level (levelNo, width, height);
         foreach (Vector2 key in map.Keys) {
-            Vector3 position = new Vector3 (key.x * WIDTH, 0, -key.y * HEIGHT);
+            Vector3 position = this.MatrixToPosition(key);
             int x = (int)key.x;
             int y = (int)key.y;
             Vector2 p = new Vector2(x, y);
@@ -50,7 +52,6 @@ public class LevelManager : MonoBehaviour {
             if (c != ' ' && c != '/' && c != '#') {
                 GameObject floorPrefab = (GameObject)Resources.Load ("Prefabs/floorPrefab", typeof(GameObject));
                 GameObject floor = (GameObject)Instantiate (floorPrefab, position, Quaternion.identity);
-                floor.transform.Find("light").GetComponent<Light>().enabled = x % 5 == 0 || y % 5 == 0;
                 floor.transform.parent = levelObject.transform;
                 level.SetObject(p, floor);
             }
@@ -107,6 +108,10 @@ public class LevelManager : MonoBehaviour {
                         Room room = new Room();
                         this.level.AddRoom(room);
                         this.AddNeighborRoom(room, x, y);
+                        Vector3 center = this.MatrixToPosition(room.GetCenter());
+                        GameObject lightPrefab = (GameObject)Resources.Load ("Prefabs/roomLightPrefab", typeof(GameObject));
+                        GameObject light = (GameObject)Instantiate (lightPrefab, center + Vector3.up * 10, Quaternion.identity);
+                        light.transform.parent = levelObject.transform;
                     }
                 }
             }
@@ -121,6 +126,10 @@ public class LevelManager : MonoBehaviour {
                         Route route = new Route();
                         this.level.AddRoute(route);
                         this.AddNeighborRoute(route, x, y);
+                        Vector3 center = this.MatrixToPosition(route.GetCenter());
+                        GameObject lightPrefab = (GameObject)Resources.Load ("Prefabs/routeLightPrefab", typeof(GameObject));
+                        GameObject light = (GameObject)Instantiate (lightPrefab, center + Vector3.up * 3, Quaternion.identity);
+                        light.transform.parent = levelObject.transform;
                     }
                 }
             }
@@ -159,6 +168,10 @@ public class LevelManager : MonoBehaviour {
         float x = position.x;
         float y = position.z;
         return new Vector2(Mathf.Floor(x / this.WIDTH), Mathf.Floor(-y / this.HEIGHT));
+    }
+    
+    private Vector3 MatrixToPosition (Vector2 matrix) {
+        return new Vector3 (matrix.x * WIDTH, 0, -matrix.y * HEIGHT);
     }
     
     public void BombRoom (Vector3 position) {
