@@ -12,11 +12,11 @@ public class LevelManager : MonoBehaviour {
 
     void Awake () {
         this.level = this.CreateLevel (this.initialLevel);
-        this.CreateRooms();
-        this.CreateRoutes();
         foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
             this.level.AddStartPoint(PositionToMatrix(player.transform.position));
         }
+        this.CreateRooms();
+        this.CreateRoutes();
     }
     
     void Update () {
@@ -29,7 +29,7 @@ public class LevelManager : MonoBehaviour {
      * @return Level
      **/
     private Level CreateLevel (int levelNo) {
-        Dictionary<Vector2, char> map = new Dictionary<Vector2, char> ();
+        Dictionary<Vector2, char> charMap = new Dictionary<Vector2, char>(); 
         TextAsset asset = (TextAsset)Resources.Load ("Levels/Level" + levelNo.ToString (), typeof(TextAsset));
         levelObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
         levelObject.renderer.enabled = false;
@@ -43,16 +43,17 @@ public class LevelManager : MonoBehaviour {
                 if (line.Length > width)
                     width = line.Length;
                 char c = line [x];
-                map.Add (new Vector2 (x, y), c);
+                charMap.Add (new Vector2 (x, y), c);
             }
         }
         Level level = new Level (levelNo, width, height);
-        foreach (Vector2 key in map.Keys) {
+        level.SetCharMap(charMap);
+        foreach (Vector2 key in charMap.Keys) {
             Vector3 position = this.MatrixToPosition(key);
             int x = (int)key.x;
             int y = (int)key.y;
             Vector2 p = new Vector2(x, y);
-            char c = map[p];
+            char c = charMap[p];
             if (c != ' ' && c != '/' && c != '#') {
                 GameObject floorPrefab = (GameObject)Resources.Load ("Prefabs/floorPrefab", typeof(GameObject));
                 GameObject floor = (GameObject)Instantiate (floorPrefab, position, Quaternion.identity);
@@ -66,7 +67,7 @@ public class LevelManager : MonoBehaviour {
                 // if route is placed holizontally, rotate object.
                 Vector2 left = new Vector2(x - 1, y);
                 Vector2 right = new Vector2(x + 1, y);
-                if ((map.ContainsKey(left) && map[left] == '/') || (map.ContainsKey(right) && map[right] == '/')) {
+                if ((charMap.ContainsKey(left) && charMap[left] == '/') || (charMap.ContainsKey(right) && charMap[right] == '/')) {
                     route.transform.Rotate (new Vector3 (0, 90, 0));
                 }
                 level.SetObject(p, route);
@@ -76,11 +77,11 @@ public class LevelManager : MonoBehaviour {
                 Vector2 up = new Vector2(x - 1, y);
                 Vector2 left = new Vector2(x - 1, y);
                 Vector2 right = new Vector2(x + 1, y);
-                if ((map.ContainsKey(left) && map[left] == '.') ^
-                    (map.ContainsKey(right) && map[right] == '.')) {
+                if ((charMap.ContainsKey(left) && charMap[left] == '.') ^
+                    (charMap.ContainsKey(right) && charMap[right] == '.')) {
                     wallPrefab = (GameObject)Resources.Load ("Prefabs/curveWallPrefab", typeof(GameObject));
                     wall = (GameObject)Instantiate (wallPrefab, position, Quaternion.identity);
-                    if ((map.ContainsKey(left) && map[left] == '.')) {
+                    if ((charMap.ContainsKey(left) && charMap[left] == '.')) {
                         wall.transform.Rotate (new Vector3 (0, 180, 0));
                     }
                 } else {
@@ -92,7 +93,7 @@ public class LevelManager : MonoBehaviour {
             } else if (c == 'S') {
                 GameObject player = GameObject.FindWithTag ("Player");
                 player.transform.position = position + Vector3.up * 5;
-            } else if (c == '*') {
+            } else if (c == '!') {
                 GameObject enemyPrefab = (GameObject)Resources.Load ("Prefabs/enemyPrefab", typeof(GameObject));
                 GameObject enemy = (GameObject)Instantiate (enemyPrefab, position + Vector3.up * 1, Quaternion.identity);
                 enemy.transform.parent = levelObject.transform;
@@ -124,6 +125,10 @@ public class LevelManager : MonoBehaviour {
                                 }
                             }
                         }
+                        // make start room as protected.
+                        if (this.level.IsStartRoom(room) ){
+                            room.SetProtect(true);
+                        }
                     }
                 }
             }
@@ -150,11 +155,14 @@ public class LevelManager : MonoBehaviour {
        
     private void AddNeighborRoom (Room room, int x, int y) {
         room.AddFloor(x, y);
+        if (this.level.GetCharMap()[new Vector2((int)x, (int)y)] == '*') {
+            room.SetProtect(true);
+        }
         int[] xs = {x + 1, x - 1, x, x};
         int[] ys = {y, y, y + 1, y - 1};
         for (int i = 0; i < 4; ++i) {
             if (this.level.IsFloor(xs[i], ys[i]) && !this.level.ContainsInRooms(xs[i], ys[i])) {
-                this.AddNeighborRoom(room, xs[i], ys[i]);
+                this.AddNeighborRoom(room, xs[i], ys[i]); 
             }
         }
     }
@@ -229,6 +237,7 @@ public class LevelManager : MonoBehaviour {
     }
     
     public void BombRoom(Room room) {
+        if (room.GetProtect()) return;
         this.DestroyRoom(room); 
         foreach (Room r in this.level.GetRooms() ) {
             if (!this.level.IsReachFromStart(r, true)) {

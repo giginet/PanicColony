@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class Room : Unit {
-    Dictionary<Vector2, Route> routes;
-    List<Vector2> walls;
+    private Dictionary<Vector2, Route> routes;
+    private List<Vector2> walls;
+    private bool protect = false;
     
     public Room () {
         this.floors = new List<Vector2>();
@@ -40,6 +41,14 @@ public class Room : Unit {
             }
         }
         return neighborRooms;
+    }
+    
+    public bool GetProtect () {
+        return this.protect;
+    }
+    
+    public void SetProtect (bool p) {
+        this.protect = p;
     }
     
 }
