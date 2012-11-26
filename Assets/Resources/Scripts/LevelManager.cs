@@ -77,8 +77,8 @@ public class LevelManager : MonoBehaviour {
                 Vector2 up = new Vector2(x - 1, y);
                 Vector2 left = new Vector2(x - 1, y);
                 Vector2 right = new Vector2(x + 1, y);
-                if ((charMap.ContainsKey(left) && charMap[left] == '.') ^
-                    (charMap.ContainsKey(right) && charMap[right] == '.')) {
+                if ((charMap.ContainsKey(left) && (charMap[left] == '.' || charMap[left] == '*')) ^
+                    (charMap.ContainsKey(right) && (charMap[right] == '.' || charMap[right] == '*'))) {
                     wallPrefab = (GameObject)Resources.Load ("Prefabs/curveWallPrefab", typeof(GameObject));
                     wall = (GameObject)Instantiate (wallPrefab, position, Quaternion.identity);
                     if ((charMap.ContainsKey(left) && charMap[left] == '.')) {
@@ -95,7 +95,7 @@ public class LevelManager : MonoBehaviour {
                 player.transform.position = position + Vector3.up * 5;
             } else if (c == '!') {
                 GameObject enemyPrefab = (GameObject)Resources.Load ("Prefabs/enemyPrefab", typeof(GameObject));
-                GameObject enemy = (GameObject)Instantiate (enemyPrefab, position + Vector3.up * 1, Quaternion.identity);
+                GameObject enemy = (GameObject)Instantiate (enemyPrefab, position + Vector3.up * 4, Quaternion.identity);
                 enemy.transform.parent = levelObject.transform;
             }
         }
@@ -293,5 +293,11 @@ public class LevelManager : MonoBehaviour {
     private void AddExplosion (Unit unit) {
         GameObject explosionPrefab = (GameObject)Resources.Load("Prefabs/bombExplosionPrefab");
         Instantiate(explosionPrefab, this.MatrixToPosition(unit.GetCenter()), Quaternion.identity);
+    }
+    
+    public void AttachBomb (GameObject bomb) {
+        Vector2 pos = this.PositionToMatrix(bomb.transform.position);
+        Room room = this.level.GetRoom(pos);
+        List<Unit> explodeUnits = new List<Unit>();
     }
 }
