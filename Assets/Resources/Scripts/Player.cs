@@ -4,8 +4,8 @@ using System.Collections;
 public class Player : MonoBehaviour {
     public int rotateThreshold = 150;
     public int rotateSpeed = 5;
+    public GameObject muzzle = null;
     private GameObject bomb = null;
-    private GameObject muzzle = null;
 
     void Start () {
         muzzle = this.gameObject;
@@ -24,33 +24,30 @@ public class Player : MonoBehaviour {
         }
         float xAxis = Input.GetAxisRaw("CameraX0");
         this.transform.Rotate(new Vector3(0, xAxis * this.rotateSpeed, 0));
-        /*Vector3 mouse = Input.mousePosition;
+        Vector3 mouse = Input.mousePosition;
         mouse.z = Camera.main.nearClipPlane;
         Vector3 screenPoint = Camera.main.WorldToScreenPoint(this.transform.position);
-        Ray ray = Camera.main.ScreenPointToRay(mouse);
+        Ray ray = new Ray(this.muzzle.transform.position, this.muzzle.transform.forward);
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, 100)) {
-        */
             LineRenderer renderer = this.GetComponent<LineRenderer>();
             renderer.enabled = true;
             renderer.SetVertexCount(2);
             renderer.SetPosition(0, this.muzzle.transform.position);
-            renderer.SetPosition(1, this.muzzle.transform.position + this.transform.forward * 100);
-            /*Vector3 target = hit.point;
-            renderer.SetPosition(1, target);
+            renderer.SetPosition(1, hit.point);
             if (hit.collider.gameObject.CompareTag("Enemy")) {
                 renderer.material.color = Color.red;   
             } else {
                 renderer.material.color = Color.yellow;   
             }
-            if (Mathf.Abs(screenPoint.x - mouse.x) > rotateThreshold ) {
-                this.transform.LookAt(Vector3.Lerp(this.transform.position + this.transform.forward * hit.distance, hit.point, 0.1f + Time.deltaTime));
+            if (Input.GetButtonDown("Shock")) {
+                if (hit.collider.gameObject.CompareTag("Enemy")) {
+                    hit.collider.gameObject.SendMessage("Shock");
+                }
             }
-            //this.transform.eulerAngles = new Vector3(0, this.transform.eulerAngles.y, 0);
-            //Vector3 sub = hit.point - transform.position;
-            //sub.y = transform.position.y;
-            //transform.forward = sub;
-        } */
+        } else {
+            renderer.enabled = false;
+        } 
     }
 }
 
