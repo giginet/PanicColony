@@ -43,6 +43,8 @@ public class Player : MonoBehaviour {
             if (Input.GetButtonDown("Shock")) {
                 if (hit.collider.gameObject.CompareTag("Enemy")) {
                     hit.collider.gameObject.SendMessage("Shock");
+                } else if (hit.collider.gameObject.CompareTag("Bomb")) {
+                    hit.collider.gameObject.SendMessage("Explode");
                 }
             }
         } else {
