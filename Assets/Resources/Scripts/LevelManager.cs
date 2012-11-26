@@ -207,8 +207,7 @@ public class LevelManager : MonoBehaviour {
     }
     
     public void BombRoom (Vector3 position) {
-        Vector2 p = this.PositionToMatrix (position);
-        Room bombRoom = this.level.GetRoom(p);
+        Room bombRoom = this.GetRoom(position);
         if (bombRoom != null) {
             this.BombRoom (bombRoom);
         }
@@ -237,7 +236,7 @@ public class LevelManager : MonoBehaviour {
     }
     
     public void BombRoom(Room room) {
-        if (room.GetProtect()) return;
+        if (room.IsProtect()) return;
         this.DestroyRoom(room); 
         foreach (Room r in this.level.GetRooms() ) {
             if (!this.level.IsReachFromStart(r, true)) {
@@ -299,5 +298,10 @@ public class LevelManager : MonoBehaviour {
         Vector2 pos = this.PositionToMatrix(bomb.transform.position);
         Room room = this.level.GetRoom(pos);
         List<Unit> explodeUnits = new List<Unit>();
+    }
+    
+    public Room GetRoom (Vector3 position) {
+        Vector2 p = this.PositionToMatrix (position);
+        return this.level.GetRoom(p);
     }
 }

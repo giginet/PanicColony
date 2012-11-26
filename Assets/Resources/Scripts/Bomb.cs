@@ -3,21 +3,22 @@ using System.Collections;
 
 public class Bomb : MonoBehaviour {
 
-    // Use this for initialization
     void Start () {
     
     }
     
-    // Update is called once per frame
     void Update () {
     
     }
  
     void Explode () {
-        GameObject explosionPrefab = (GameObject)Resources.Load("Prefabs/bombExplosionPrefab");
-        Instantiate(explosionPrefab, this.transform.position, Quaternion.identity);
-        Destroy(gameObject);
         GameObject manager = GameObject.FindWithTag("LevelManager");
-        manager.SendMessage("BombRoom", this.transform.position);
+        Room room = manager.GetComponent<LevelManager>().GetRoom(this.transform.position);
+        if (room != null && !room.IsProtect()) {
+            GameObject explosionPrefab = (GameObject)Resources.Load("Prefabs/bombExplosionPrefab");
+            Instantiate(explosionPrefab, this.transform.position, Quaternion.identity);
+            manager.SendMessage("BombRoom", this.transform.position);
+        }
+        Destroy(gameObject);
     }
 }

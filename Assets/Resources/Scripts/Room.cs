@@ -43,7 +43,7 @@ public class Room : Unit {
         return neighborRooms;
     }
     
-    public bool GetProtect () {
+    public bool IsProtect () {
         return this.protect;
     }
     
