@@ -163,7 +163,7 @@ public class Level {
     public bool IsReachFromStart (Room room, bool enableOnly) {
         List<Room> neighbors = this.GetAllNeighborRooms(room, null, enableOnly);
         foreach (Room neighbor in neighbors) {
-            if (neighbor.GetEnable() && this.IsStartRoom(neighbor)) {
+            if (neighbor.IsEnable() && this.IsStartRoom(neighbor)) {
                 return true;
             }
         }

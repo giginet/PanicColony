@@ -26,7 +26,7 @@ public class Unit {
         return this.floors;
     }
     
-    public bool GetEnable () {
+    public bool IsEnable () {
         return this.enable;
     }
     

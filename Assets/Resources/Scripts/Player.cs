@@ -45,6 +45,8 @@ public class Player : MonoBehaviour {
                     hit.collider.gameObject.SendMessage("Shock");
                 } else if (hit.collider.gameObject.CompareTag("Bomb")) {
                     hit.collider.gameObject.SendMessage("Explode");
+                } else if (hit.collider.gameObject.CompareTag("Wall")) {
+                    hit.collider.gameObject.SendMessage("Damage");
                 }
             }
         } else {

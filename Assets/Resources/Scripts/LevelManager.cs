@@ -54,7 +54,7 @@ public class LevelManager : MonoBehaviour {
             int y = (int)key.y;
             Vector2 p = new Vector2(x, y);
             char c = charMap[p];
-            if (c != ' ' && c != '/' && c != '#') {
+            if (c != ' ' && c != '/' && c != '#' && c != '$') {
                 GameObject floorPrefab = (GameObject)Resources.Load ("Prefabs/floorPrefab", typeof(GameObject));
                 GameObject floor = (GameObject)Instantiate (floorPrefab, position, Quaternion.identity);
                 floor.transform.parent = levelObject.transform;
@@ -71,22 +71,34 @@ public class LevelManager : MonoBehaviour {
                     route.transform.Rotate (new Vector3 (0, 90, 0));
                 }
                 level.SetObject(p, route);
-            } else if (c == '#') {
+            } else if (c == '#' || c == '$') {
                 GameObject wallPrefab = null;
                 GameObject wall = null;
-                Vector2 up = new Vector2(x - 1, y);
+                Vector2 up = new Vector2(x, y - 1);
+                Vector2 down = new Vector2(x, y + 1);
                 Vector2 left = new Vector2(x - 1, y);
                 Vector2 right = new Vector2(x + 1, y);
                 if ((charMap.ContainsKey(left) && (charMap[left] == '.' || charMap[left] == '*')) ^
                     (charMap.ContainsKey(right) && (charMap[right] == '.' || charMap[right] == '*'))) {
                     wallPrefab = (GameObject)Resources.Load ("Prefabs/curveWallPrefab", typeof(GameObject));
                     wall = (GameObject)Instantiate (wallPrefab, position, Quaternion.identity);
-                    if ((charMap.ContainsKey(left) && charMap[left] == '.')) {
+                    if ((charMap.ContainsKey(left) && (charMap[left] == '.' || charMap[left] == '*'))) {
                         wall.transform.Rotate (new Vector3 (0, 180, 0));
                     }
                 } else {
-                    wallPrefab = (GameObject)Resources.Load ("Prefabs/wallPrefab", typeof(GameObject));
+                    if (c == '#') {
+                        // Normal Wall
+                        wallPrefab = (GameObject)Resources.Load ("Prefabs/wallPrefab", typeof(GameObject));
+                    }else if (c == '$') {
+                        // Broken Wall
+                        wallPrefab = (GameObject)Resources.Load ("Prefabs/brokenWallPrefab", typeof(GameObject));
+                    }
                     wall = (GameObject)Instantiate (wallPrefab, position + Vector3.up * 6, Quaternion.identity);
+                    if (charMap.ContainsKey(up) && (charMap[up] == '.' || charMap[up] == '*' || charMap[up] == '#')) {
+                        wall.transform.Translate(Vector3.forward * this.HEIGHT / 2.0f);
+                    } else if (charMap.ContainsKey(down) && (charMap[down] == '.' || charMap[down] == '*' || charMap[down] == '#')) {
+                        wall.transform.Translate(Vector3.forward * -this.HEIGHT / 2.0f);
+                    }
                 }
                 wall.transform.parent = levelObject.transform;
                 level.SetObject(p, wall);
@@ -231,8 +243,10 @@ public class LevelManager : MonoBehaviour {
         foreach (Vector2 point in room.GetWalls()) {
             this.DestroyTile(point, rigidbody);
         }
-        this.level.DisableRoom(room);
-        this.AddExplosion(room);
+        if (room.IsEnable()) {
+            this.AddExplosion(room);
+            this.level.DisableRoom(room);
+        }
     }
     
     public void BombRoom(Room room) {
@@ -247,7 +261,7 @@ public class LevelManager : MonoBehaviour {
             bool bombRoute = true;
             foreach (Vector2 pos in route.GetRooms().Keys) {
                 Room r = route.GetRooms()[pos];
-                if (r.GetEnable()) {
+                if (r.IsEnable()) {
                     bombRoute = false;
                 }
                 if (r == room) {
@@ -283,7 +297,7 @@ public class LevelManager : MonoBehaviour {
         foreach (Node node in graph.nodes) {
             Vector2 p = this.PositionToMatrix(new Vector3(node.position.x / 1000, node.position.y / 1000, node.position.z / 1000));
             Room r = this.level.GetRoom (p);
-            if (r != null && !r.GetEnable()) {
+            if (r != null && !r.IsEnable()) {
                 guo.Apply(node);
             }
         }
