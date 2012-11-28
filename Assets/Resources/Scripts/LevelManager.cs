@@ -95,9 +95,9 @@ public class LevelManager : MonoBehaviour {
                     }
                     wall = (GameObject)Instantiate (wallPrefab, position + Vector3.up * 6, Quaternion.identity);
                     if (charMap.ContainsKey(up) && (charMap[up] == '.' || charMap[up] == '*' || charMap[up] == '#')) {
-                        wall.transform.Translate(Vector3.forward * this.HEIGHT / 2.0f);
+                        wall.transform.Translate(Vector3.forward * (this.HEIGHT / 2.0f - 0.1f));
                     } else if (charMap.ContainsKey(down) && (charMap[down] == '.' || charMap[down] == '*' || charMap[down] == '#')) {
-                        wall.transform.Translate(Vector3.forward * -this.HEIGHT / 2.0f);
+                        wall.transform.Translate(Vector3.forward * -(this.HEIGHT / 2.0f - 0.1f));
                     }
                 }
                 wall.transform.parent = levelObject.transform;
@@ -107,7 +107,7 @@ public class LevelManager : MonoBehaviour {
                 player.transform.position = position + Vector3.up * 5;
             } else if (c == '!') {
                 GameObject enemyPrefab = (GameObject)Resources.Load ("Prefabs/enemyPrefab", typeof(GameObject));
-                GameObject enemy = (GameObject)Instantiate (enemyPrefab, position + Vector3.up * 4, Quaternion.identity);
+                GameObject enemy = (GameObject)Instantiate (enemyPrefab, position + Vector3.up * 6, Quaternion.identity);
                 enemy.transform.parent = levelObject.transform;
             }
         }

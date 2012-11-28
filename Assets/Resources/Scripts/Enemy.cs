@@ -22,6 +22,9 @@ public class Enemy : MonoBehaviour {
     }
     
     void Update () {
+        if (this.transform.position.y < -10) {
+            Destroy(gameObject);
+        }
         if (this.state == EnemyState.Normal) {
             this.aiPath.enabled = true;
         } else if (this.state == EnemyState.Shocking) {

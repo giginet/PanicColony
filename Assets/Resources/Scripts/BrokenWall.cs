@@ -8,6 +8,8 @@ public class BrokenWall : Wall {
 
     protected void Damage () {
         Destroy (this.gameObject);
+        GameObject absorberPrefab = (GameObject)Resources.Load ("Prefabs/absorberPrefab", typeof(GameObject));
+        GameObject absorber = (GameObject)Instantiate (absorberPrefab, this.transform.position, Quaternion.identity);
     }
     
 }

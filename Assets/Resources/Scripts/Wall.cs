@@ -1,10 +1,9 @@
 using UnityEngine;
 using System.Collections;
 
-public class Wall : Tile {
+public class Wall : MonoBehaviour {
 
     void Start () {
-        this.type = TileType.Wall; 
     }
     
     // Update is called once per frame

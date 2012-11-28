@@ -4,14 +4,51 @@ using System.Collections;
 public class Player : MonoBehaviour {
     public int rotateThreshold = 150;
     public int rotateSpeed = 5;
+    public float speed = 10;
     public GameObject muzzle = null;
     private GameObject bomb = null;
+    private Vector3 lastVelocity;
 
     void Start () {
         muzzle = this.gameObject;
     }
     
     void Update () {
+        /*if (!this.IsGrounded() && !this.rigidbody.useGravity) {
+            this.rigidbody.useGravity = true;
+            rigidbody.constraints &= ~RigidbodyConstraints.FreezePositionY;
+        } else if (this.IsGrounded() && this.rigidbody.useGravity) {
+            this.rigidbody.useGravity = false;
+            rigidbody.constraints |= RigidbodyConstraints.FreezePositionY;
+        }
+        Vector3 gravity = new Vector3(0, this.rigidbody.velocity.y, 0);
+        Vector3 forward = Camera.main.transform.TransformDirection(Vector3.forward);
+        forward.y = 0;
+        forward = forward.normalized;
+        Vector3 right = new Vector3(forward.z, 0, -forward.x);
+        float h = Input.GetAxis("Horizontal");
+        float v = Input.GetAxis("Vertical");
+        Vector3 velocity = h * right + v * forward;
+        
+        if (Mathf.Abs(h) < 0.1 && Mathf.Abs(v) < 0.1) {
+            velocity = Vector3.Lerp(lastVelocity, Vector3.zero, 0.9f);
+            if (Mathf.Abs(velocity.x) < 0.1f && Mathf.Abs(velocity.z) < 0.1f) {
+                velocity = Vector3.zero;
+                lastVelocity = Vector3.zero;
+            }
+        } else {
+            lastVelocity = velocity;
+        }
+        Vector3 verticalVelocity = Vector3.zero;
+        if (Input.GetButtonDown("Jump")) {
+            verticalVelocity = Vector3.up * 10f;
+            rigidbody.constraints &= ~RigidbodyConstraints.FreezePositionY;
+        } else if (this.IsGrounded()) {
+            verticalVelocity = Vector3.zero;
+        }
+        this.rigidbody.velocity = gravity + velocity * this.speed + verticalVelocity;
+        
+        */
         if (Input.GetButtonDown("Bomb0") ) {
             if (bomb == null) {
                 // place Bomb
@@ -52,6 +89,15 @@ public class Player : MonoBehaviour {
         } else {
             renderer.enabled = false;
         } 
+    }
+    
+    bool IsGrounded () {
+        Ray floorRay = new Ray(this.transform.position + Vector3.down * this.transform.localScale.y / 2.0f, Vector3.down);
+        RaycastHit hit;
+        if (Physics.Raycast(floorRay, out hit, 0.5f)) {
+                return true;
+        }
+        return false;
     }
 }
 
