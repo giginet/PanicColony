@@ -264,6 +264,14 @@ public class LevelManager : MonoBehaviour {
                     shutter.transform.parent = routeTile.transform;
                     shutter.transform.localPosition = Vector3.up * 2;
                     shutter.transform.localRotation = Quaternion.Euler(0, 0, 0);
+                    int x = (int)pos.x;
+                    int y = (int)pos.y;
+                    if (this.level.IsFloor(x, y + 1) || this.level.IsFloor(x - 1, y)) {
+                        shutter.transform.localPosition += Vector3.back;
+                    } else if (this.level.IsFloor(x, y - 1) || this.level.IsFloor(x + 1, y)) {
+                        shutter.transform.localPosition += Vector3.forward;
+                    }
+                    Debug.Log(shutter.transform.localPosition);
                 }
             }
             if (bombRoute) {

@@ -13,6 +13,7 @@ public class Bomb : MonoBehaviour {
         RaycastHit hit;
         if (Physics.Raycast(floorRay, out hit, this.transform.localScale.y / 2) && !this.ground) {
             this.animation.Play("setup");
+            this.audio.Play();
             this.ground = true;
         } else if (!this.ground) {
             this.animation.Stop("setup");
