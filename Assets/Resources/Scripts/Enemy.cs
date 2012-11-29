@@ -27,6 +27,11 @@ public class Enemy : MonoBehaviour {
         }
         if (this.state == EnemyState.Normal) {
             this.aiPath.enabled = true;
+            foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")){
+                if (Vector3.Distance(player.transform.position, this.transform.position) < 1.5f) {
+                    Destroy(player);
+                }
+            }
         } else if (this.state == EnemyState.Shocking) {
             this.transform.Rotate(Vector3.up * rotationSpeed);
             this.aiPath.enabled = false;
@@ -36,6 +41,7 @@ public class Enemy : MonoBehaviour {
                 this.state = EnemyState.Normal;
             }
         }
+        
     }
     
     public void Shock() {

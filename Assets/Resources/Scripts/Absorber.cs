@@ -29,7 +29,7 @@ public class Absorber : MonoBehaviour {
         if (distance < this.range) {
             Vector3 absorb = position - targetPosition;
             absorb = Vector3.Normalize (absorb) * absorbSpeed / distance;
-            target.transform.Translate(absorb * Time.deltaTime);
+            target.transform.position += absorb * Time.deltaTime;
         }
     }
 }

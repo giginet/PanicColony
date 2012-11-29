@@ -58,6 +58,14 @@ public class Level {
         return this.charMap;
     }
     
+    public char GetChar(int x, int y) {
+        Vector2 v = new Vector2(x, y);
+        if (this.charMap.ContainsKey(v)) {
+            return this.charMap[v];
+        }
+        return ' ';
+    }
+    
     public void SetCharMap (Dictionary<Vector2, char> cm) {
         this.charMap = cm;
     }
@@ -103,15 +111,18 @@ public class Level {
     }
     
     public bool IsFloor (int x, int y) {
-        GameObject obj = this.GetObject(x, y);
-        if (obj == null || !obj.GetComponent<Tile>()) return false;
-        return obj.GetComponent<Tile>().type == Tile.TileType.Floor;
+        char c = this.GetChar(x, y);
+        return c != ' ' && c != '/' && c != '#' && c != '$';
     }
     
     public bool IsRoute (int x, int y) {
-        GameObject obj = this.GetObject(x, y);
-        if (obj == null || !obj.GetComponent<Tile>()) return false;
-        return obj.GetComponent<Tile>().type == Tile.TileType.Route;
+        char c = this.GetChar(x, y);
+        return c == '/';
+    }
+    
+    public bool IsWall (int x, int y) {
+        char c = this.GetChar(x, y);
+        return c == '#' || c == '$';
     }
     
     public List<Room> GetRooms () {

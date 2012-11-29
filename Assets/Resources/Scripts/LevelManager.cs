@@ -54,35 +54,28 @@ public class LevelManager : MonoBehaviour {
             int y = (int)key.y;
             Vector2 p = new Vector2(x, y);
             char c = charMap[p];
-            if (c != ' ' && c != '/' && c != '#' && c != '$') {
+            if (level.IsFloor(x, y)) {
                 GameObject floorPrefab = (GameObject)Resources.Load ("Prefabs/floorPrefab", typeof(GameObject));
                 GameObject floor = (GameObject)Instantiate (floorPrefab, position, Quaternion.identity);
                 floor.transform.parent = levelObject.transform;
                 level.SetObject(p, floor);
             }
-            if (c == '/') {
+            if (level.IsRoute(x, y)) {
                 GameObject routePrefab = (GameObject)Resources.Load ("Prefabs/routePrefab", typeof(GameObject));
                 GameObject route = (GameObject)Instantiate (routePrefab, position, Quaternion.identity);
                 route.transform.parent = levelObject.transform;
                 // if route is placed holizontally, rotate object.
-                Vector2 left = new Vector2(x - 1, y);
-                Vector2 right = new Vector2(x + 1, y);
-                if ((charMap.ContainsKey(left) && charMap[left] == '/') || (charMap.ContainsKey(right) && charMap[right] == '/')) {
+                if (level.IsRoute(x - 1, y) || level.IsRoute(x + 1, y)) {
                     route.transform.Rotate (new Vector3 (0, 90, 0));
                 }
                 level.SetObject(p, route);
-            } else if (c == '#' || c == '$') {
+            } else if (level.IsWall(x, y)) {
                 GameObject wallPrefab = null;
                 GameObject wall = null;
-                Vector2 up = new Vector2(x, y - 1);
-                Vector2 down = new Vector2(x, y + 1);
-                Vector2 left = new Vector2(x - 1, y);
-                Vector2 right = new Vector2(x + 1, y);
-                if ((charMap.ContainsKey(left) && (charMap[left] == '.' || charMap[left] == '*')) ^
-                    (charMap.ContainsKey(right) && (charMap[right] == '.' || charMap[right] == '*'))) {
+                if (level.IsFloor(x - 1, y) ^ level.IsFloor(x + 1, y)) {
                     wallPrefab = (GameObject)Resources.Load ("Prefabs/curveWallPrefab", typeof(GameObject));
                     wall = (GameObject)Instantiate (wallPrefab, position, Quaternion.identity);
-                    if ((charMap.ContainsKey(left) && (charMap[left] == '.' || charMap[left] == '*'))) {
+                    if (level.IsFloor(x - 1, y)) {
                         wall.transform.Rotate (new Vector3 (0, 180, 0));
                     }
                 } else {
@@ -94,9 +87,9 @@ public class LevelManager : MonoBehaviour {
                         wallPrefab = (GameObject)Resources.Load ("Prefabs/brokenWallPrefab", typeof(GameObject));
                     }
                     wall = (GameObject)Instantiate (wallPrefab, position + Vector3.up * 6, Quaternion.identity);
-                    if (charMap.ContainsKey(up) && (charMap[up] == '.' || charMap[up] == '*' || charMap[up] == '#')) {
+                    if (level.IsFloor(x, y - 1) || level.IsWall(x, y - 1)) {
                         wall.transform.Translate(Vector3.forward * (this.HEIGHT / 2.0f - 0.1f));
-                    } else if (charMap.ContainsKey(down) && (charMap[down] == '.' || charMap[down] == '*' || charMap[down] == '#')) {
+                    } else if (level.IsFloor(x, y + 1) || level.IsWall(x, y + 1)) {
                         wall.transform.Translate(Vector3.forward * -(this.HEIGHT / 2.0f - 0.1f));
                     }
                 }
@@ -130,10 +123,10 @@ public class LevelManager : MonoBehaviour {
                         GameObject light = (GameObject)Instantiate (lightPrefab, center + Vector3.up * 10, Quaternion.identity);
                         light.transform.parent = levelObject.transform;
                         foreach (Vector2 point in room.GetFloors()) {
-                            GameObject obj = this.level.GetObject(point);
-                            foreach (GameObject neighbor in this.level.GetNeighbors(point, false)) {
-                                if (neighbor.CompareTag("Wall")) {
-                                    room.AddWalls(this.PositionToMatrix(neighbor.transform.position));
+                            Vector2[] neighbors = {point + Vector2.up, point + -Vector2.up, point + Vector2.right, point + -Vector2.right};
+                            foreach (Vector2 neighbor in neighbors) {
+                                if (this.level.IsWall((int)neighbor.x, (int)neighbor.y)) {
+                                    room.AddWalls(neighbor);
                                 }
                             }
                         }

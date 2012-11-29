@@ -7,7 +7,6 @@ public class Player : MonoBehaviour {
     public float speed = 10;
     public GameObject muzzle = null;
     private GameObject bomb = null;
-    private Vector3 lastVelocity;
 
     void Start () {
         muzzle = this.gameObject;
@@ -89,6 +88,8 @@ public class Player : MonoBehaviour {
         } else {
             renderer.enabled = false;
         } 
+        CharacterMotor motor = this.gameObject.GetComponent<CharacterMotor>();
+        this.audio.volume = Vector3.Distance(motor.GetDirection(), Vector3.zero) / 1.0f;
     }
     
     bool IsGrounded () {
