@@ -10,7 +10,8 @@ public class JoyStickController : MonoBehaviour {
         public Transform cameraTransform = Camera.main.transform;
         public float distance = 3.0f;
         public float height = 5.0f;
-        public float damping = 3.0f;
+        public float damping = 1.0f;
+        public float rotationDamping = 3.0f;
         public CameraRotationControl horizontalControl;
         public CameraRotationControl verticalControl;
     }
@@ -38,7 +39,7 @@ public class JoyStickController : MonoBehaviour {
     }
     
     // Update is called once per frame
-    void LateUpdate () {
+    void FixedUpdate () {
         if (this.cameraControl.enabled) {
             this.ControlCamera();
         }
@@ -48,7 +49,7 @@ public class JoyStickController : MonoBehaviour {
         // Calculate the current rotation angles
         Vector3 wantedCameraPosition = this.transform.position + Quaternion.Euler(this.wantedCameraAngle) * (this.transform.forward * -this.cameraControl.distance) + Vector3.up * this.cameraControl.height;
         Vector3 currentCameraPosition = this.cameraControl.cameraTransform.position;
-        Quaternion wantedCameraRotation = Quaternion.LookRotation(wantedCameraPosition - currentCameraPosition);
+        Quaternion wantedCameraRotation = Quaternion.LookRotation(this.transform.position - wantedCameraPosition);
         Quaternion currentCameraRotation = this.cameraControl.cameraTransform.rotation;
 
         float xAxis = Input.GetAxisRaw(this.cameraControl.horizontalControl.axisName);
@@ -68,8 +69,8 @@ public class JoyStickController : MonoBehaviour {
             this.wantedCameraAngle.x = Mathf.Clamp(this.wantedCameraAngle.x, min, max);
         }
         
-        Vector3 cameraPosition = Vector3.Lerp(wantedCameraPosition, currentCameraPosition, this.cameraControl.damping * Time.deltaTime);
-        Quaternion cameraRotation = Quaternion.Lerp(wantedCameraRotation, currentCameraRotation, this.cameraControl.damping * Time.deltaTime);
+        Vector3 cameraPosition = Vector3.Lerp(currentCameraPosition, wantedCameraPosition, this.cameraControl.damping * Time.deltaTime);
+        Quaternion cameraRotation = Quaternion.Lerp(currentCameraRotation, wantedCameraRotation, this.cameraControl.rotationDamping * Time.deltaTime);
         
         if (this.cameraControl.rigidbodyEnabled && this.cameraControl.cameraTransform.gameObject.rigidbody != null) {
             this.cameraControl.cameraTransform.gameObject.rigidbody.MovePosition(cameraPosition);
