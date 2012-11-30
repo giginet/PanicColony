@@ -17,7 +17,7 @@ public class LevelManager : MonoBehaviour {
         }
         this.CreateRooms();
         this.CreateRoutes();
-        this.ConnectGates();
+        this.ConnectGates(); 
     }
     
     void Update () {
@@ -99,9 +99,9 @@ public class LevelManager : MonoBehaviour {
                         wallPrefab = (GameObject)Resources.Load ("Prefabs/brokenWallPrefab", typeof(GameObject));
                     }
                     wall = (GameObject)Instantiate (wallPrefab, position + Vector3.up * 6, Quaternion.identity);
-                    if (level.IsFloor(x, y - 1) || level.IsWall(x, y - 1)) {
+                    if (level.IsFloor(x, y - 1) || level.IsFloor(x - 1, y - 1) || level.IsFloor(x + 1, y - 1) ) {
                         wall.transform.Translate(Vector3.forward * (this.HEIGHT / 2.0f - 0.1f));
-                    } else if (level.IsFloor(x, y + 1) || level.IsWall(x, y + 1)) {
+                    } else if (level.IsFloor(x, y + 1) || level.IsFloor(x - 1, y + 1) || level.IsFloor(x + 1, y + 1) ) {
                         wall.transform.Translate(Vector3.forward * -(this.HEIGHT / 2.0f - 0.1f));
                     }
                 }
@@ -134,7 +134,9 @@ public class LevelManager : MonoBehaviour {
                         GameObject light = (GameObject)Instantiate (lightPrefab, center + Vector3.up * 10, Quaternion.identity);
                         light.transform.parent = levelObject.transform;
                         foreach (Vector2 point in room.GetFloors()) {
-                            Vector2[] neighbors = {point + Vector2.up, point + -Vector2.up, point + Vector2.right, point + -Vector2.right};
+                            Vector2[] neighbors = {point + Vector2.up, point + -Vector2.up, point + Vector2.right, point + -Vector2.right,
+                                point + Vector2.one, point - Vector2.one, point + Vector2.up - Vector2.right, -Vector2.up + Vector2.right
+                            };
                             foreach (Vector2 neighbor in neighbors) {
                                 if (this.level.IsWall((int)neighbor.x, (int)neighbor.y)) {
                                     room.AddWalls(neighbor);
@@ -256,10 +258,14 @@ public class LevelManager : MonoBehaviour {
     public void BombRoom(Room room) {
         if (room.IsProtect()) return;
         this.DestroyRoom(room); 
+        List<Room> destroyRooms = new List<Room>();
         foreach (Room r in this.level.GetRooms() ) {
             if (!this.level.IsReachFromStart(r, true)) {
-               this.DestroyRoom(r); 
+                destroyRooms.Add (r);
             }
+        }
+        foreach (Room r in destroyRooms) { 
+            this.DestroyRoom(r); 
         }
         foreach (Route route in this.level.GetRoutes()) {
             bool bombRoute = true;
@@ -275,12 +281,14 @@ public class LevelManager : MonoBehaviour {
                 }
             }
             if (bombRoute) {
-                route.SetEnable(false);
                 bool rigidbody = this.IsExistPlayer(route);
                 foreach (Vector2 point in route.GetFloors()) {
                     this.DestroyTile(point, rigidbody); 
                 }
-                this.AddExplosion(route);
+                if (route.IsEnable()) {
+                    this.AddExplosion(route);
+                    route.SetEnable(false);
+                }
             }
         } 
         this.UpdatePath(); 

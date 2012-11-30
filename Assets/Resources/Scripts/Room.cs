@@ -40,8 +40,9 @@ public class Room : Unit {
         foreach (Route route in this.routes.Values) {
             foreach (Room room in route.GetRooms().Values) {
                 if (room != this && !neighborRooms.Contains(room)) {
-                    if (!enableOnly || (enableOnly && route.IsEnable() && room.IsEnable()))
-                    neighborRooms.Add(room);
+                    if (!enableOnly || (enableOnly && route.IsEnable() && room.IsEnable() && this.IsEnable())) {
+                        neighborRooms.Add(room);
+                    }
                 }
             }
         }

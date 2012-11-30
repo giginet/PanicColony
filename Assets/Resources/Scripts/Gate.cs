@@ -18,13 +18,17 @@ public class Gate : MonoBehaviour {
     void Start () {
         left = (GameObject)this.gameObject.transform.Find("left").gameObject;
         right = (GameObject)this.gameObject.transform.Find("right").gameObject;
-        this.Open();
+        this.isOpeaning = true;
     }
     
     void Update () {
         if (this.type == GateType.Automatic) {
             GameObject player = GameObject.FindWithTag("Player");
-            isOpeaning = (Vector3.Distance(player.transform.position, this.transform.position) < this.threshold);
+            if (Vector3.Distance(player.transform.position, this.transform.position) < this.threshold) {
+                this.Open();
+            } else {
+                this.Close();
+            }
         }
         this.Move();
     }
@@ -49,10 +53,15 @@ public class Gate : MonoBehaviour {
     }
     
     public void Open () {
-        this.isOpeaning = true;
+        if (!this.isOpeaning) {
+            this.isOpeaning = true;
+            this.audio.Play();
+        }
     }
     
     public void Close () {
-        this.isOpeaning = false;
+        if (this.isOpeaning) {
+            this.isOpeaning = false;
+        }
     }
 }

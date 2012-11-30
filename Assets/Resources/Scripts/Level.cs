@@ -112,7 +112,7 @@ public class Level {
     
     public bool IsFloor (int x, int y) {
         char c = this.GetChar(x, y);
-        return c != ' ' && !this.IsRoute(x, y) && !this.IsWall(x, y);
+        return (c == '*' || c == '.' || char.IsDigit(c) || c == '!') && !this.IsRoute(x, y) && !this.IsWall(x, y);
     }
     
     public bool IsRoute (int x, int y) {
@@ -166,15 +166,18 @@ public class Level {
     
     public bool IsStartRoom (Room room) {
         foreach (Vector2 p in this.startPoints) {
-            return room.ContainsFloor((int)p.x, (int)p.y);
+            if (room.ContainsFloor((int)p.x, (int)p.y)) {
+                return true;
+            }
         }
         return false;
     }
     
     public bool IsReachFromStart (Room room, bool enableOnly) {
         List<Room> neighbors = this.GetAllNeighborRooms(room, null, enableOnly);
+        if (this.IsStartRoom(room)) return true;
         foreach (Room neighbor in neighbors) {
-            if (neighbor.IsEnable() && this.IsStartRoom(neighbor)) {
+            if (this.IsStartRoom(neighbor)) {
                 return true;
             }
         }
@@ -185,10 +188,13 @@ public class Level {
         if (neighborRooms == null) {
             neighborRooms = new List<Room>();
         }
-        neighborRooms.Add(room);
         foreach ( Room neighbor in room.GetNeighborRooms(enableOnly) ) {
             if ( !neighborRooms.Contains(neighbor) ) {
-                return this.GetAllNeighborRooms(neighbor, neighborRooms, enableOnly);
+                neighborRooms.Add(neighbor);
+                List<Room> nextNeighbors = this.GetAllNeighborRooms(neighbor, neighborRooms, enableOnly);
+                foreach (Room nextNeighbor in nextNeighbors) {
+                    if (!neighborRooms.Contains(nextNeighbor) && nextNeighbor != room) neighborRooms.Add (nextNeighbor);
+                }
             }
         }
         return neighborRooms;
