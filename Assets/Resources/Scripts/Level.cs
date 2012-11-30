@@ -89,7 +89,7 @@ public class Level {
     
     public Room GetRoom (Vector2 position) {
         foreach (Room room in this.rooms) {
-            if (room.ContainsFloor((int)position.x, (int)position.y) ) {
+            if (room.ContainsFloor((int)position.x, (int)position.y) || room.ContainsWall((int)position.x, (int)position.y)) {
                 return room;
             }
         }
@@ -112,12 +112,12 @@ public class Level {
     
     public bool IsFloor (int x, int y) {
         char c = this.GetChar(x, y);
-        return c != ' ' && c != '/' && c != '#' && c != '$';
+        return c != ' ' && !this.IsRoute(x, y) && !this.IsWall(x, y);
     }
     
     public bool IsRoute (int x, int y) {
         char c = this.GetChar(x, y);
-        return c == '/';
+        return c == '/' || c == '|' || char.IsUpper(c);
     }
     
     public bool IsWall (int x, int y) {

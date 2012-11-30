@@ -3,15 +3,15 @@ using System.Collections;
 
 public class Absorber : MonoBehaviour {
     public float absorbSpeed = 70.0f;
-    public float range = 15.0f;
+    private LevelManager levelManager = null;
 
     // Use this for initialization
     void Start () {
-        this.transform.Translate(Vector3.down * 100);
+        this.levelManager = GameObject.FindWithTag("LevelManager").GetComponent<LevelManager>();
     }
     
     // Update is called once per frame
-    void Update () {
+    void FixedUpdate () {
         foreach (GameObject target in GameObject.FindGameObjectsWithTag("Player")) {
             this.Absorb (target);
         } 
@@ -26,10 +26,18 @@ public class Absorber : MonoBehaviour {
         Vector3 targetPosition = target.transform.position;
         targetPosition.y = 0;
         float distance = Vector3.Distance (targetPosition, position);
-        if (distance < this.range) {
-            Vector3 absorb = position - targetPosition;
-            absorb = Vector3.Normalize (absorb) * absorbSpeed / distance;
-            target.transform.position += absorb * Time.deltaTime;
+        Room absorberRoom = this.levelManager.GetRoom(this.transform.position);
+        Room targetRoom = this.levelManager.GetRoom(target.transform.position);
+        if (absorberRoom == targetRoom) {
+            CharacterController controller = target.GetComponent<CharacterController>();
+            if (controller != null) {
+                Vector3 absorb = this.transform.position - target.transform.position;
+                absorb = Vector3.Normalize(absorb) * (absorbSpeed / Vector3.Distance(this.transform.position, target.transform.position)) * Time.deltaTime;
+                controller.Move(absorb);
+                if (distance < 0.5) {
+                    Destroy(target.gameObject);
+                }
+            }
         }
     }
 }

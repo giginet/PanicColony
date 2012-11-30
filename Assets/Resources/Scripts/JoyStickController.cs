@@ -43,11 +43,14 @@ public class JoyStickController : MonoBehaviour {
         if (this.cameraControl.enabled) {
             this.ControlCamera();
         }
+        Vector3 lookTarget = this.transform.position + Quaternion.Euler(this.wantedCameraAngle) * Vector3.forward;
+        lookTarget.y = this.transform.position.y;
+        this.transform.LookAt(lookTarget);
     }
     
     void ControlCamera () {
         // Calculate the current rotation angles
-        Vector3 wantedCameraPosition = this.transform.position + Quaternion.Euler(this.wantedCameraAngle) * (this.transform.forward * -this.cameraControl.distance) + Vector3.up * this.cameraControl.height;
+        Vector3 wantedCameraPosition = this.transform.position + Quaternion.Euler(this.wantedCameraAngle) * (Vector3.forward * -this.cameraControl.distance) + Vector3.up * this.cameraControl.height;
         Vector3 currentCameraPosition = this.cameraControl.cameraTransform.position;
         Quaternion wantedCameraRotation = Quaternion.LookRotation(this.transform.position - wantedCameraPosition);
         Quaternion currentCameraRotation = this.cameraControl.cameraTransform.rotation;

@@ -2,8 +2,14 @@ using UnityEngine;
 using System.Collections;
 
 public class Gate : MonoBehaviour {
-    public int range = 2;
-    public float speed = 0.5f;
+    public enum GateType {
+        Automatic,
+        Switch
+    }; 
+    public int range = 1;
+    public int threshold = 5;
+    public float speed = 2.5f;
+    public GateType type = GateType.Automatic;
     private float distance = 0.0f;
     private GameObject left = null;
     private GameObject right = null;
@@ -15,8 +21,14 @@ public class Gate : MonoBehaviour {
     }
     
     void Update () {
-        GameObject player = GameObject.FindWithTag("Player");
-        isOpeaning = (Vector3.Distance(player.transform.position, this.transform.position) < 2.0);
+        if (this.type == GateType.Automatic) {
+            GameObject player = GameObject.FindWithTag("Player");
+            isOpeaning = (Vector3.Distance(player.transform.position, this.transform.position) < this.threshold);
+        }
+        this.Move();
+    }
+    
+    private void Move () {
         if (isOpeaning) {
             distance += speed * Time.deltaTime;
         } else {
@@ -33,5 +45,13 @@ public class Gate : MonoBehaviour {
         Vector3 rightPosition = this.right.transform.localPosition;
         rightPosition.x = distance;
         this.right.transform.localPosition = rightPosition;
+    }
+    
+    public void Open () {
+        this.isOpeaning = true;
+    }
+    
+    public void Close () {
+        this.isOpeaning = false;
     }
 }

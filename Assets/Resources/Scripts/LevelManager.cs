@@ -11,7 +11,7 @@ public class LevelManager : MonoBehaviour {
     private Level level;
 
     void Awake () {
-        this.level = this.CreateLevel (this.initialLevel);
+        this.CreateLevel (this.initialLevel);
         foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
             this.level.AddStartPoint(PositionToMatrix(player.transform.position));
         }
@@ -28,7 +28,7 @@ public class LevelManager : MonoBehaviour {
      * @param int levelNo
      * @return Level
      **/
-    private Level CreateLevel (int levelNo) {
+    private void CreateLevel (int levelNo) {
         Dictionary<Vector2, char> charMap = new Dictionary<Vector2, char>(); 
         TextAsset asset = (TextAsset)Resources.Load ("Levels/Level" + levelNo.ToString (), typeof(TextAsset));
         levelObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -47,6 +47,7 @@ public class LevelManager : MonoBehaviour {
             }
         }
         Level level = new Level (levelNo, width, height);
+        this.level = level;
         level.SetCharMap(charMap);
         foreach (Vector2 key in charMap.Keys) {
             Vector3 position = this.MatrixToPosition(key);
@@ -69,6 +70,14 @@ public class LevelManager : MonoBehaviour {
                     route.transform.Rotate (new Vector3 (0, 90, 0));
                 }
                 level.SetObject(p, route);
+                // add Gate
+                if (char.IsUpper(c)) {
+                    GameObject gatePrefab = (GameObject)Resources.Load("Prefabs/gatePrefab", typeof(GameObject)); 
+                    this.AddGate(route, gatePrefab);
+                } else if (c == '|') {
+                    GameObject gatePrefab = (GameObject)Resources.Load("Prefabs/autoGatePrefab", typeof(GameObject)); 
+                    this.AddGate(route, gatePrefab);
+                }
             } else if (level.IsWall(x, y)) {
                 GameObject wallPrefab = null;
                 GameObject wall = null;
@@ -95,9 +104,9 @@ public class LevelManager : MonoBehaviour {
                 }
                 wall.transform.parent = levelObject.transform;
                 level.SetObject(p, wall);
-            } else if (c == 'S') {
+            } else if (char.IsDigit(c)) {
                 GameObject player = GameObject.FindWithTag ("Player");
-                player.transform.position = position + Vector3.up * 5;
+                player.transform.position = position + Vector3.up * 2;
             } else if (c == '!') {
                 GameObject enemyPrefab = (GameObject)Resources.Load ("Prefabs/enemyPrefab", typeof(GameObject));
                 GameObject enemy = (GameObject)Instantiate (enemyPrefab, position + Vector3.up * 6, Quaternion.identity);
@@ -107,7 +116,6 @@ public class LevelManager : MonoBehaviour {
         AstarPath path = AstarPath.active;
         PointGraph graph = path.graphs[0] as PointGraph;
         graph.Scan();
-        return level;
     }
     
     private void CreateRooms () {
@@ -257,21 +265,10 @@ public class LevelManager : MonoBehaviour {
                 if (r.IsEnable()) {
                     bombRoute = false;
                 }
-                if (r == room) {
+                if (r == room) {  
                     GameObject shutterPrefab = (GameObject)Resources.Load("Prefabs/shutterPrefab", typeof(GameObject)); 
                     GameObject routeTile = this.level.GetObject(pos);
-                    GameObject shutter = (GameObject)Instantiate(shutterPrefab, routeTile.transform.position, Quaternion.identity);
-                    shutter.transform.parent = routeTile.transform;
-                    shutter.transform.localPosition = Vector3.up * 2;
-                    shutter.transform.localRotation = Quaternion.Euler(0, 0, 0);
-                    int x = (int)pos.x;
-                    int y = (int)pos.y;
-                    if (this.level.IsFloor(x, y + 1) || this.level.IsFloor(x - 1, y)) {
-                        shutter.transform.localPosition += Vector3.back;
-                    } else if (this.level.IsFloor(x, y - 1) || this.level.IsFloor(x + 1, y)) {
-                        shutter.transform.localPosition += Vector3.forward;
-                    }
-                    Debug.Log(shutter.transform.localPosition);
+                    this.AddGate(routeTile, shutterPrefab);
                 }
             }
             if (bombRoute) {
@@ -318,5 +315,20 @@ public class LevelManager : MonoBehaviour {
     public Room GetRoom (Vector3 position) {
         Vector2 p = this.PositionToMatrix (position);
         return this.level.GetRoom(p);
+    }
+    
+    public void AddGate (GameObject routeTile, GameObject prefab) {
+        GameObject shutter = (GameObject)Instantiate(prefab, routeTile.transform.position, Quaternion.identity);
+        shutter.transform.parent = routeTile.transform;
+        shutter.transform.localPosition = Vector3.zero;
+        shutter.transform.localRotation = Quaternion.Euler(0, 0, 0);
+        Vector2 pos = this.PositionToMatrix(routeTile.transform.position);
+        int x = (int)pos.x;
+        int y = (int)pos.y;
+        if (this.level.IsFloor(x, y + 1) || this.level.IsFloor(x - 1, y)) {
+            shutter.transform.localPosition += Vector3.back;
+        } else if (this.level.IsFloor(x, y - 1) || this.level.IsFloor(x + 1, y)) {
+            shutter.transform.localPosition += Vector3.forward;
+        }
     }
 }

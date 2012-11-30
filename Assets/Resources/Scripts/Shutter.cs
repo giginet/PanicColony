@@ -7,6 +7,7 @@ public class Shutter : MonoBehaviour {
     public float speed = 2.5f;
 
     void Start () {
+        this.transform.localPosition += Vector3.up * 2;
     }
     
     void Update () {

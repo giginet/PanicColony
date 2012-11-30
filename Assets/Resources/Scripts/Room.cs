@@ -26,6 +26,11 @@ public class Room : Unit {
         this.routes.Add(position, route);
     }
     
+    public bool ContainsWall(int x, int y) {
+        Vector2 p = new Vector2(x, y);
+        return this.walls.Contains(p);
+    }
+    
     public Dictionary<Vector2, Route> GetRoutes () {
         return this.routes;
     }
