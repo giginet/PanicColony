@@ -18,6 +18,7 @@ public class Gate : MonoBehaviour {
     void Start () {
         left = (GameObject)this.gameObject.transform.Find("left").gameObject;
         right = (GameObject)this.gameObject.transform.Find("right").gameObject;
+        this.Open();
     }
     
     void Update () {

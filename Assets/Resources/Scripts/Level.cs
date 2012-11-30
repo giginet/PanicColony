@@ -122,7 +122,7 @@ public class Level {
     
     public bool IsWall (int x, int y) {
         char c = this.GetChar(x, y);
-        return c == '#' || c == '$';
+        return c == '#' || c == '$' || char.IsLower(c);
     }
     
     public List<Room> GetRooms () {

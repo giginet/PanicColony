@@ -17,6 +17,7 @@ public class LevelManager : MonoBehaviour {
         }
         this.CreateRooms();
         this.CreateRoutes();
+        this.ConnectGates();
     }
     
     void Update () {
@@ -91,7 +92,9 @@ public class LevelManager : MonoBehaviour {
                     if (c == '#') {
                         // Normal Wall
                         wallPrefab = (GameObject)Resources.Load ("Prefabs/wallPrefab", typeof(GameObject));
-                    }else if (c == '$') {
+                    } else if (char.IsLower(c)) {
+                        wallPrefab = (GameObject)Resources.Load ("Prefabs/switchWallPrefab", typeof(GameObject));
+                    } else if (c == '$') {
                         // Broken Wall
                         wallPrefab = (GameObject)Resources.Load ("Prefabs/brokenWallPrefab", typeof(GameObject));
                     }
@@ -329,6 +332,28 @@ public class LevelManager : MonoBehaviour {
             shutter.transform.localPosition += Vector3.back;
         } else if (this.level.IsFloor(x, y - 1) || this.level.IsFloor(x + 1, y)) {
             shutter.transform.localPosition += Vector3.forward;
+        }
+    }
+    
+    private void ConnectGates () {
+        Dictionary<char, GameObject> gates = new Dictionary<char, GameObject>();
+        Dictionary<char, GameObject> switchs = new Dictionary<char, GameObject>();
+        foreach (Vector2 position in this.level.GetCharMap().Keys) {
+            char c = this.level.GetCharMap()[position];
+            if (char.IsUpper(c)) {
+                // gate
+                gates.Add(c, this.level.GetObject(position));
+            } else if (char.IsLower(c)) {
+                // switch
+                switchs.Add(c, this.level.GetObject(position));
+            }
+        }
+        foreach (char c in switchs.Keys) {
+            if (gates.ContainsKey(char.ToUpper(c))) {
+                Switch switchComponent = switchs[c].GetComponentInChildren<Switch>();
+                Gate gateComponent = gates[char.ToUpper(c)].GetComponentInChildren<Gate>();
+                switchComponent.SendMessage("SetGate", gateComponent.gameObject);
+            }
         }
     }
 }
