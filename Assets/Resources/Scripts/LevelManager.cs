@@ -164,6 +164,9 @@ public class LevelManager : MonoBehaviour {
                         Vector3 center = this.MatrixToPosition(route.GetCenter());
                         GameObject lightPrefab = (GameObject)Resources.Load ("Prefabs/routeLightPrefab", typeof(GameObject));
                         GameObject light = (GameObject)Instantiate (lightPrefab, center + Vector3.up * 3, Quaternion.identity);
+                        if (this.level.IsRoute(x + 1, y) || this.level.IsRoute(x - 1, y)) {
+                            light.transform.Rotate(Vector3.up * 90);
+                        }
                         light.transform.parent = levelObject.transform;
                     }
                 }
@@ -250,6 +253,13 @@ public class LevelManager : MonoBehaviour {
             this.DestroyTile(point, rigidbody);
         }
         if (room.IsEnable()) {
+            GameObject radar = GameObject.Find("Radar");
+            radar.SendMessage("DestroyUnit", room);
+            foreach (GameObject enemy in GameObject.FindGameObjectsWithTag("Enemy")) {
+                if (this.GetRoom(enemy.transform.position) == room) {
+                    enemy.SendMessage("Death");
+                }
+            }
             this.AddExplosion(room);
             this.level.DisableRoom(room);
         }
@@ -286,11 +296,13 @@ public class LevelManager : MonoBehaviour {
                     this.DestroyTile(point, rigidbody); 
                 }
                 if (route.IsEnable()) {
+                    GameObject radar = GameObject.Find("Radar");
+                    radar.SendMessage("DestroyUnit", route);
                     this.AddExplosion(route);
                     route.SetEnable(false);
                 }
             }
-        } 
+        }  
         this.UpdatePath(); 
     }
     
@@ -363,5 +375,9 @@ public class LevelManager : MonoBehaviour {
                 switchComponent.SendMessage("SetGate", gateComponent.gameObject);
             }
         }
+    }
+    
+    public Level GetLevel () {
+        return this.level;
     }
 }

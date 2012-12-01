@@ -10,6 +10,8 @@ public class Gate : MonoBehaviour {
     public int threshold = 5;
     public float speed = 2.5f;
     public GateType type = GateType.Automatic;
+    public int maxHP = 100;
+    private int HP = 0;
     private float distance = 0.0f;
     private GameObject left = null;
     private GameObject right = null;
@@ -19,6 +21,7 @@ public class Gate : MonoBehaviour {
         left = (GameObject)this.gameObject.transform.Find("left").gameObject;
         right = (GameObject)this.gameObject.transform.Find("right").gameObject;
         this.isOpeaning = true;
+        this.HP = maxHP;
     }
     
     void Update () {
@@ -31,6 +34,14 @@ public class Gate : MonoBehaviour {
             }
         }
         this.Move();
+        foreach (GameObject enemy in GameObject.FindGameObjectsWithTag("Enemy")) {
+            if (Vector3.Distance(enemy.transform.position, this.transform.position) < 3.0) {
+                this.HP -= 1;
+            }
+        }
+        if (this.HP <= 0) {
+            Destroy(this.gameObject);
+        }
     }
     
     private void Move () {

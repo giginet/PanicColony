@@ -36,6 +36,7 @@ public class JoyStickController : MonoBehaviour {
     // Use this for initialization
     void Start () {
         this.cameraControl.cameraTransform.position = this.transform.position + Vector3.up * this.cameraControl.height + this.transform.forward * -this.cameraControl.distance;
+        this.cameraControl.cameraTransform.collider.enabled = this.cameraControl.rigidbodyEnabled;
     }
     
     // Update is called once per frame

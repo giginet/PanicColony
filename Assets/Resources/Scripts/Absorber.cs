@@ -35,7 +35,7 @@ public class Absorber : MonoBehaviour {
                 absorb = Vector3.Normalize(absorb) * (absorbSpeed / Vector3.Distance(this.transform.position, target.transform.position)) * Time.deltaTime;
                 controller.Move(absorb);
                 if (distance < 0.5) {
-                    Destroy(target.gameObject);
+                    controller.Move(Vector3.down * 10);
                 }
             }
         }

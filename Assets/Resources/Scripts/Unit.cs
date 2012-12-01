@@ -41,4 +41,8 @@ public class Unit {
         }
         return center / this.floors.Count;
     }
+    
+    virtual public bool IsProtect () {
+        return false;
+    }
 }

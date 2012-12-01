@@ -28,7 +28,7 @@ public class Enemy : MonoBehaviour {
         if (this.state == EnemyState.Normal) {
             this.aiPath.enabled = true;
             foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")){
-                if (Vector3.Distance(player.transform.position, this.transform.position) < 1.5f) {
+                if (Vector3.Distance(player.transform.position, this.transform.position) < 2.5f) {
                     Destroy(player);
                 }
             }
@@ -47,6 +47,12 @@ public class Enemy : MonoBehaviour {
     public void Shock() {
         this.state = EnemyState.Shocking;
         this.shockTime = 0;
+    }
+    
+    public void Death () {
+        Destroy(this.gameObject);
+        GameObject radar = GameObject.Find ("Radar");
+        radar.SendMessage("DestroyChip", this.gameObject);
     }
  
 }

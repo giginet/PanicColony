@@ -6,6 +6,10 @@ public class Bomb : MonoBehaviour {
 
     void Start () {
         this.animation.Play("setup");
+        GameObject radar = GameObject.Find("Radar");
+        LevelManager manager = GameObject.FindWithTag("LevelManager").GetComponent<LevelManager>();
+        Room room = manager.GetRoom(this.transform.position);
+        radar.SendMessage("SetWarning", room);
     }
     
     void Update () {
