@@ -17,9 +17,8 @@ public class Radar : MonoBehaviour {
     
     void Start () {
         this.levelManager = GameObject.FindWithTag("LevelManager").GetComponent<LevelManager>();
-        this.level = levelManager.GetLevel();
-        this.tiles = new Dictionary<Vector2, GameObject>();
-        this.chips = new Dictionary<GameObject, GameObject>();
+        this.transform.position = new Vector3(1000, 0, 1000);
+        this.DestroyRadar(); 
         this.CreateRadar();
     }
     
@@ -27,7 +26,13 @@ public class Radar : MonoBehaviour {
         this.UpdateChip();
     }
     
+    void DestroyRadar () {
+        this.tiles = new Dictionary<Vector2, GameObject>();
+        this.chips = new Dictionary<GameObject, GameObject>();
+    }
+    
     void CreateRadar () {
+        this.level = levelManager.GetLevel();
         Dictionary<Vector2, char> charMap = this.level.GetCharMap();
         foreach (Vector2 key in charMap.Keys) {
             Vector3 position = new Vector3 (key.x, 0, -key.y);
@@ -109,6 +114,11 @@ public class Radar : MonoBehaviour {
             room.SetEnable(false);
         }
         foreach (Room other in this.level.GetRooms()) {
+            if (!this.level.IsReachFromStart(other, true)) {
+                this.SetUnitColor(other, FloorColor.Warning);
+            }
+        }
+        foreach (Route other in this.level.GetRoutes()) {
             if (!this.level.IsReachFromStart(other, true)) {
                 this.SetUnitColor(other, FloorColor.Warning);
             }

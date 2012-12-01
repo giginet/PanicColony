@@ -16,12 +16,14 @@ public class Enemy : MonoBehaviour {
     private EnemyState state = 0;
     private AIPath aiPath;
 
-    void Start () {
+    void Awake () {
         this.aiPath = this.gameObject.GetComponent<AIPath>();
         this.aiPath.target = GameObject.FindWithTag("Player").transform;
     }
     
     void Update () {
+        this.aiPath = this.gameObject.GetComponent<AIPath>();
+        this.aiPath.target = GameObject.FindWithTag("Player").transform;
         if (this.transform.position.y < -10) {
             Destroy(gameObject);
         }
@@ -29,7 +31,7 @@ public class Enemy : MonoBehaviour {
             this.aiPath.enabled = true;
             foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")){
                 if (Vector3.Distance(player.transform.position, this.transform.position) < 2.5f) {
-                    Destroy(player);
+                    player.SendMessage("Death");
                 }
             }
         } else if (this.state == EnemyState.Shocking) {
@@ -51,7 +53,7 @@ public class Enemy : MonoBehaviour {
     
     public void Death () {
         Destroy(this.gameObject);
-        GameObject radar = GameObject.Find ("Radar");
+        GameObject radar = GameObject.FindWithTag("Radar");
         radar.SendMessage("DestroyChip", this.gameObject);
     }
  

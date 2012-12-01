@@ -6,18 +6,10 @@ using Pathfinding;
 public class LevelManager : MonoBehaviour {
     public int WIDTH = 10;
     public int HEIGHT = 10;
-    public int initialLevel = 0;
     private GameObject levelObject = null;
     private Level level;
 
     void Awake () {
-        this.CreateLevel (this.initialLevel);
-        foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
-            this.level.AddStartPoint(PositionToMatrix(player.transform.position));
-        }
-        this.CreateRooms();
-        this.CreateRoutes();
-        this.ConnectGates(); 
     }
     
     void Update () {
@@ -108,17 +100,26 @@ public class LevelManager : MonoBehaviour {
                 wall.transform.parent = levelObject.transform;
                 level.SetObject(p, wall);
             } else if (char.IsDigit(c)) {
-                GameObject player = GameObject.FindWithTag ("Player");
-                player.transform.position = position + Vector3.up * 2;
+                GameObject prefab = (GameObject)Resources.Load("Prefabs/playerPrefab");
+                GameObject player = (GameObject)Instantiate(prefab, position + Vector3.up, Quaternion.identity);
+                player.transform.parent = levelObject.transform;
             } else if (c == '!') {
                 GameObject enemyPrefab = (GameObject)Resources.Load ("Prefabs/enemyPrefab", typeof(GameObject));
                 GameObject enemy = (GameObject)Instantiate (enemyPrefab, position + Vector3.up * 6, Quaternion.identity);
                 enemy.transform.parent = levelObject.transform;
             }
         }
+        foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
+            this.level.AddStartPoint(PositionToMatrix(player.transform.position));
+        }
+        this.CreateRooms();
+        this.CreateRoutes();
+        this.ConnectGates(); 
         AstarPath path = AstarPath.active;
+        path.Initialize();
         PointGraph graph = path.graphs[0] as PointGraph;
         graph.Scan();
+        path.FlushGraphUpdates();
     }
     
     private void CreateRooms () {
@@ -144,7 +145,7 @@ public class LevelManager : MonoBehaviour {
                             }
                         }
                         // make start room as protected.
-                        if (this.level.IsStartRoom(room) ){
+                        if (this.level.IsStartUnit(room) ){
                             room.SetProtect(true);
                         }
                     }
@@ -199,8 +200,8 @@ public class LevelManager : MonoBehaviour {
             } else if (this.level.IsFloor(xs[i], ys[i])) {
                 Room room = this.level.GetRoom(v);
                 if (room != null) {
-                    route.AddRoom(new Vector2(x, y), room);
-                    room.AddRoute(v, route);
+                    route.AddNeighbor(new Vector2(x, y), room);
+                    room.AddNeighbor(v, route);
                 }
             }
         }
@@ -253,7 +254,7 @@ public class LevelManager : MonoBehaviour {
             this.DestroyTile(point, rigidbody);
         }
         if (room.IsEnable()) {
-            GameObject radar = GameObject.Find("Radar");
+            GameObject radar = GameObject.FindWithTag("Radar");
             radar.SendMessage("DestroyUnit", room);
             foreach (GameObject enemy in GameObject.FindGameObjectsWithTag("Enemy")) {
                 if (this.GetRoom(enemy.transform.position) == room) {
@@ -278,25 +279,21 @@ public class LevelManager : MonoBehaviour {
             this.DestroyRoom(r); 
         }
         foreach (Route route in this.level.GetRoutes()) {
-            bool bombRoute = true;
-            foreach (Vector2 pos in route.GetRooms().Keys) {
-                Room r = route.GetRooms()[pos];
-                if (r.IsEnable()) {
-                    bombRoute = false;
-                }
+            foreach (Vector2 pos in route.GetNeighbors().Keys) {
+                Unit r = route.GetNeighbors()[pos];
                 if (r == room) {  
                     GameObject shutterPrefab = (GameObject)Resources.Load("Prefabs/shutterPrefab", typeof(GameObject)); 
                     GameObject routeTile = this.level.GetObject(pos);
                     this.AddGate(routeTile, shutterPrefab);
                 }
             }
-            if (bombRoute) {
+            if (!this.level.IsReachFromStart(route, true)) {
                 bool rigidbody = this.IsExistPlayer(route);
                 foreach (Vector2 point in route.GetFloors()) {
                     this.DestroyTile(point, rigidbody); 
                 }
                 if (route.IsEnable()) {
-                    GameObject radar = GameObject.Find("Radar");
+                    GameObject radar = GameObject.FindWithTag("Radar");
                     radar.SendMessage("DestroyUnit", route);
                     this.AddExplosion(route);
                     route.SetEnable(false);
@@ -379,5 +376,15 @@ public class LevelManager : MonoBehaviour {
     
     public Level GetLevel () {
         return this.level;
+    }
+    
+    public void DestroyLevel () {
+        Destroy(this.levelObject);
+        this.level = null;
+        this.levelObject = null;
+    }
+    
+    public GameObject GetLevelObject () {
+        return this.levelObject;
     }
 }

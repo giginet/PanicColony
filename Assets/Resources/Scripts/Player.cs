@@ -2,18 +2,34 @@ using UnityEngine;
 using System.Collections;
 
 public class Player : MonoBehaviour {
+
+    public enum PlayerState {
+        Normal,
+        Shock,
+        DeathAnimation,
+        Death
+    };
+   
     public int rotateThreshold = 150;
     public int rotateSpeed = 5;
     public float speed = 10;
     public GameObject muzzle = null;
     private GameObject bomb = null;
     private GameObject shockEffect = null;
+    private bool canControl = true;
+    private JoyStickController controller = null;
+    private float deathTimer = 0;
+    private PlayerState state = PlayerState.Normal;
 
     void Start () {
         muzzle = this.gameObject;
+        this.state = PlayerState.Normal;
+        this.controller = this.GetComponent<JoyStickController>();
+        this.controller.cameraControl.cameraTransform = Camera.main.transform;
+        this.controller.cameraControl.cameraTransform.position = this.transform.position;
     }
     
-    void Update () {
+    void Control () {
         if (Input.GetButtonDown("Bomb0") ) {
             if (bomb == null) {
                 // place Bomb
@@ -65,11 +81,29 @@ public class Player : MonoBehaviour {
             renderer.enabled = false;
         } 
         if (this.shockEffect != null) {
-                shockEffect.transform.position = this.muzzle.transform.position;
-                shockEffect.transform.LookAt(hit.point);
+            shockEffect.transform.position = this.muzzle.transform.position;
+            shockEffect.transform.LookAt(hit.point);
         }
         CharacterMotor motor = this.gameObject.GetComponent<CharacterMotor>();
         this.audio.volume = Vector3.Distance(motor.GetDirection(), Vector3.zero) / 1.0f;
+    }
+    
+    void Update () {
+        this.controller.SetInputType(Input.GetJoystickNames().Length == 0 ? InputType.Mouse : InputType.JoyStick);
+        if (this.canControl) {
+            this.Control();
+        } 
+        if (this.state == PlayerState.DeathAnimation) {
+            Transform head = this.transform.Find("head");
+            head.Rotate(Vector3.up * 60);
+            this.deathTimer += Time.deltaTime;
+            if (deathTimer > 1.0) {
+                this.state = PlayerState.Death;
+                this.DestroyBody();
+                GameObject controller = GameObject.FindWithTag("GameController");
+                controller.SendMessage("GameOver");
+            }
+        }
     }
     
     bool IsGrounded () {
@@ -79,6 +113,33 @@ public class Player : MonoBehaviour {
                 return true;
         }
         return false;
+    }
+    
+    void Death () {
+        if (this.state != PlayerState.Normal) return;
+        LineRenderer renderer = this.GetComponent<LineRenderer>(); 
+        renderer.enabled = false;  
+        this.SetControl(false);
+        this.audio.volume = 0;
+        this.state = PlayerState.DeathAnimation;
+    }
+    
+    void DestroyBody () {
+        GameObject head = this.transform.Find("head").gameObject;
+        foreach (Transform part in this.transform) {
+            part.gameObject.AddComponent("Rigidbody");
+            if (part.GetComponent<BoxCollider>() != null) {
+                part.GetComponent<BoxCollider>().enabled = true;
+            }
+            part.rigidbody.velocity = Random.onUnitSphere;
+        }
+        head.rigidbody.velocity = Vector3.back;
+    }
+    
+    void SetControl (bool c) {
+        this.canControl = c;
+        this.GetComponent<CharacterMotor>().canControl = false;
+        this.GetComponent<JoyStickController>().enableLookRotation = false;
     }
 }
 

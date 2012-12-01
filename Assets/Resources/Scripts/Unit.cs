@@ -4,11 +4,13 @@ using System.Collections.Generic;
 
 public class Unit {
     
+    protected Dictionary<Vector2, Unit> neighbors;
     protected List<Vector2> floors;
     protected bool enable = true;
     
     public Unit () {
         this.floors = new List<Vector2>();
+        this.neighbors = new Dictionary<Vector2, Unit>();
         this.enable = true;
     }
     
@@ -44,5 +46,25 @@ public class Unit {
     
     virtual public bool IsProtect () {
         return false;
+    }
+    
+    public void AddNeighbor (Vector2 position, Unit neighbor) {
+        this.neighbors.Add(position, neighbor);
+    }
+    
+    public Dictionary<Vector2, Unit> GetNeighbors () {
+        return this.neighbors;
+    }
+    
+    public List<Unit> GetNeighborUnits (bool enableOnly) {
+        List<Unit> neighborUnits = new List<Unit>();
+        if (this.IsEnable() || !enableOnly ) {
+            foreach (Unit neighbor in this.neighbors.Values) {
+                if (neighbor.IsEnable() || !enableOnly) {
+                    neighborUnits.Add(neighbor);
+                }
+            }
+        }
+        return neighborUnits;
     }
 }

@@ -164,40 +164,40 @@ public class Level {
         return neighbors;
     }
     
-    public bool IsStartRoom (Room room) {
+    public bool IsStartUnit (Unit unit) {
         foreach (Vector2 p in this.startPoints) {
-            if (room.ContainsFloor((int)p.x, (int)p.y)) {
+            if (unit.ContainsFloor((int)p.x, (int)p.y)) {
                 return true;
             }
         }
         return false;
     }
     
-    public bool IsReachFromStart (Room room, bool enableOnly) {
-        List<Room> neighbors = this.GetAllNeighborRooms(room, null, enableOnly);
-        if (this.IsStartRoom(room)) return true;
-        foreach (Room neighbor in neighbors) {
-            if (this.IsStartRoom(neighbor)) {
+    public bool IsReachFromStart (Unit unit, bool enableOnly) {
+        List<Unit> neighbors = this.GetAllNeighborUnits(unit, null, enableOnly);
+        if (this.IsStartUnit(unit)) return true;
+        foreach (Unit neighbor in neighbors) {
+            if (this.IsStartUnit(neighbor)) {
                 return true;
             }
         }
         return false;
     }
     
-    public List<Room> GetAllNeighborRooms (Room room, List<Room> neighborRooms, bool enableOnly) {
-        if (neighborRooms == null) {
-            neighborRooms = new List<Room>();
+    public List<Unit> GetAllNeighborUnits (Unit unit, List<Unit> neighborUnits, bool enableOnly) {
+        if (neighborUnits == null) {
+            neighborUnits = new List<Unit>();
         }
-        foreach ( Room neighbor in room.GetNeighborRooms(enableOnly) ) {
-            if ( !neighborRooms.Contains(neighbor) ) {
-                neighborRooms.Add(neighbor);
-                List<Room> nextNeighbors = this.GetAllNeighborRooms(neighbor, neighborRooms, enableOnly);
-                foreach (Room nextNeighbor in nextNeighbors) {
-                    if (!neighborRooms.Contains(nextNeighbor) && nextNeighbor != room) neighborRooms.Add (nextNeighbor);
+        foreach ( Unit neighbor in unit.GetNeighborUnits(enableOnly) ) {
+            if ( !neighborUnits.Contains(neighbor) ) {
+                neighborUnits.Add(neighbor);
+                List<Unit> nextNeighbors = this.GetAllNeighborUnits(neighbor, neighborUnits, enableOnly);
+                foreach (Unit nextNeighbor in nextNeighbors) {
+                    if (!neighborUnits.Contains(nextNeighbor) && nextNeighbor != unit) neighborUnits.Add (nextNeighbor);
                 }
             }
         }
-        return neighborRooms;
+        return neighborUnits;
     }
     
 }

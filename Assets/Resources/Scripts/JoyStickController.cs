@@ -1,13 +1,19 @@
 using UnityEngine;
 using System.Collections;
 
+public enum InputType {
+    Mouse,
+    JoyStick
+}; 
+    
 public class JoyStickController : MonoBehaviour {
+    private InputType type = InputType.Mouse; 
     
     [System.Serializable]
     public class CameraControl {
         public bool enabled = true;
         public bool rigidbodyEnabled = false;
-        public Transform cameraTransform = Camera.main.transform;
+        public Transform cameraTransform = null;
         public float distance = 3.0f;
         public float height = 5.0f;
         public float damping = 1.0f;
@@ -17,7 +23,7 @@ public class JoyStickController : MonoBehaviour {
     }
     
     public class CharacterControl {
-    }
+    } 
     
     [System.Serializable]
     public class CameraRotationControl {
@@ -28,6 +34,12 @@ public class JoyStickController : MonoBehaviour {
         public float minAngle = -75.0f;
         public float maxAngle = 75f;
     }
+    
+    public int mouseRotationHorizontalThreshold = 400;
+    public int mouseRotationVerticalThreshold = 400;
+    public float mouseRotationHorizontalSpeed = 1.0f;
+    public float mouseRotationVerticalSpeed = 1.0f;
+    public bool enableLookRotation = true;
     
     public CameraControl cameraControl;
     public CharacterControl characterControl;
@@ -44,9 +56,11 @@ public class JoyStickController : MonoBehaviour {
         if (this.cameraControl.enabled) {
             this.ControlCamera();
         }
-        Vector3 lookTarget = this.transform.position + Quaternion.Euler(this.wantedCameraAngle) * Vector3.forward;
-        lookTarget.y = this.transform.position.y;
-        this.transform.LookAt(lookTarget);
+        if (this.enableLookRotation) {
+            Vector3 lookTarget = this.transform.position + Quaternion.Euler(this.wantedCameraAngle) * Vector3.forward;
+            lookTarget.y = this.transform.position.y;
+            this.transform.LookAt(lookTarget);
+        }
     }
     
     void ControlCamera () {
@@ -58,6 +72,15 @@ public class JoyStickController : MonoBehaviour {
 
         float xAxis = Input.GetAxisRaw(this.cameraControl.horizontalControl.axisName);
         float yAxis = Input.GetAxisRaw(this.cameraControl.verticalControl.axisName);
+        if (this.type == InputType.Mouse) {
+            Vector3 mousePoint = Input.mousePosition;
+            if (Mathf.Abs(mousePoint.x - Screen.width / 2) > this.mouseRotationHorizontalThreshold) {
+                xAxis += ((mousePoint.x - Screen.width / 2.0f) / (Screen.width / 2.0f)) * mouseRotationHorizontalSpeed;
+            }
+            if (Mathf.Abs(mousePoint.y - Screen.height / 2) > this.mouseRotationVerticalThreshold) {
+                yAxis += ((mousePoint.y - Screen.width / 2.0f) / (Screen.height / 2.0f)) * mouseRotationVerticalSpeed;
+            }
+        }
         if (this.cameraControl.horizontalControl.controllEnabled && Mathf.Abs (xAxis) > 0.1) {
             this.wantedCameraAngle.y += xAxis * this.cameraControl.horizontalControl.speed * (this.cameraControl.horizontalControl.inverse ? 1 : -1);
             float min = this.cameraControl.horizontalControl.minAngle;
@@ -82,6 +105,18 @@ public class JoyStickController : MonoBehaviour {
         } else {
             this.cameraControl.cameraTransform.position = cameraPosition; 
             this.cameraControl.cameraTransform.rotation = cameraRotation;
-        }   
+        } 
+    }
+    
+    void SetWantedCameraAngle (Vector3 v) {
+        this.wantedCameraAngle = v;
+    }
+    
+    Vector3 GetWantedCameraAngle () {
+        return this.wantedCameraAngle;
+    }
+    
+    public void SetInputType (InputType t) {
+        this.type = t;
     }
 }
