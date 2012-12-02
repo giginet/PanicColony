@@ -78,6 +78,17 @@ public class Level {
         this.routes.Add(route);
     }
     
+    public Unit GetUnit (Vector2 pos) {
+        Room room = this.GetRoom(pos);
+        if (room != null) {
+            return room;
+        } else {
+            Route route = this.GetRoute(pos);
+            return route;
+        }
+        return null;
+    }
+    
     public void AddStartPoint (Vector2 point) {
         this.startPoints.Add(point);
     }

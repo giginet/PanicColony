@@ -95,6 +95,7 @@ public class LevelManager : MonoBehaviour {
                         wall.transform.Translate(Vector3.forward * (this.HEIGHT / 2.0f - 0.1f));
                     } else if (level.IsFloor(x, y + 1) || level.IsFloor(x - 1, y + 1) || level.IsFloor(x + 1, y + 1) ) {
                         wall.transform.Translate(Vector3.forward * -(this.HEIGHT / 2.0f - 0.1f));
+                        wall.transform.Rotate(Vector3.up * 180);
                     }
                 }
                 wall.transform.parent = levelObject.transform;
@@ -103,14 +104,12 @@ public class LevelManager : MonoBehaviour {
                 GameObject prefab = (GameObject)Resources.Load("Prefabs/playerPrefab");
                 GameObject player = (GameObject)Instantiate(prefab, position + Vector3.up, Quaternion.identity);
                 player.transform.parent = levelObject.transform;
+                this.level.AddStartPoint(p);
             } else if (c == '!') {
                 GameObject enemyPrefab = (GameObject)Resources.Load ("Prefabs/enemyPrefab", typeof(GameObject));
                 GameObject enemy = (GameObject)Instantiate (enemyPrefab, position + Vector3.up * 6, Quaternion.identity);
                 enemy.transform.parent = levelObject.transform;
             }
-        }
-        foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
-            this.level.AddStartPoint(PositionToMatrix(player.transform.position));
         }
         this.CreateRooms();
         this.CreateRoutes();
@@ -247,23 +246,34 @@ public class LevelManager : MonoBehaviour {
     
     public void DestroyRoom (Room room) {
         bool rigidbody = this.IsExistPlayer(room); 
-        foreach (Vector2 point in room.GetFloors()) {
-            this.DestroyTile(point, rigidbody);
-        }
         foreach (Vector2 point in room.GetWalls()) {
             this.DestroyTile(point, rigidbody);
         }
-        if (room.IsEnable()) {
+        this.DestroyUnit(room);
+        this.level.DisableRoom(room);
+    }
+    
+    public void DestroyUnit (Unit unit) {
+        bool rigidbody = this.IsExistPlayer(unit); 
+        foreach (Vector2 point in unit.GetFloors()) {
+            this.DestroyTile(point, rigidbody);
+        }
+        
+        if (unit.IsEnable()) {
             GameObject radar = GameObject.FindWithTag("Radar");
-            radar.SendMessage("DestroyUnit", room);
+            radar.SendMessage("DestroyUnit", unit);
+            List<GameObject> enemies = new List<GameObject>();
+            // Send enemies to controller killed by explosion.
             foreach (GameObject enemy in GameObject.FindGameObjectsWithTag("Enemy")) {
-                if (this.GetRoom(enemy.transform.position) == room) {
+                if (this.level.GetUnit(this.MatrixToPosition(this.transform.position)) == unit) {
                     enemy.SendMessage("Death");
+                    enemies.Add(enemy);
                 }
             }
-            this.AddExplosion(room);
-            this.level.DisableRoom(room);
-        }
+            GameObject controller = GameObject.FindWithTag("GameController");
+            controller.SendMessage("BombEnemy", enemies);
+            this.AddExplosion(unit);
+        } 
     }
     
     public void BombRoom(Room room) {
@@ -288,16 +298,7 @@ public class LevelManager : MonoBehaviour {
                 }
             }
             if (!this.level.IsReachFromStart(route, true)) {
-                bool rigidbody = this.IsExistPlayer(route);
-                foreach (Vector2 point in route.GetFloors()) {
-                    this.DestroyTile(point, rigidbody); 
-                }
-                if (route.IsEnable()) {
-                    GameObject radar = GameObject.FindWithTag("Radar");
-                    radar.SendMessage("DestroyUnit", route);
-                    this.AddExplosion(route);
-                    route.SetEnable(false);
-                }
+                this.DestroyUnit(route);
             }
         }  
         this.UpdatePath(); 
@@ -386,5 +387,8 @@ public class LevelManager : MonoBehaviour {
     
     public GameObject GetLevelObject () {
         return this.levelObject;
+    }
+    
+    void ResetLevel () {
     }
 }

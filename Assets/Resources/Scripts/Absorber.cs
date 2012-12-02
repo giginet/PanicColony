@@ -8,6 +8,7 @@ public class Absorber : MonoBehaviour {
     // Use this for initialization
     void Start () {
         this.levelManager = GameObject.FindWithTag("LevelManager").GetComponent<LevelManager>();
+        this.transform.parent = this.levelManager.GetLevelObject().transform;
     }
     
     // Update is called once per frame

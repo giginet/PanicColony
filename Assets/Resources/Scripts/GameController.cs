@@ -1,18 +1,26 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class GameController : MonoBehaviour {
 
     public int initialLevel = 1;
+    public int initialLife = 3;
+    public int levelCount = 2;
     private GameState state = GameState.Start;
     private GameObject levelManager = null;
     private AudioSource audioPlayer = null;
-    private int[] scores = {0, 0};
+    private int[] lives = {0, 0};
     private int currentLevel = 1;
+    private int [] currentScores = {0, 0};
+    private int [] targetScores = {0, 0};
+    private List<GameObject> players;
+    private float timer = 0;
 
     public enum GameState {
         Start,
         Main,
+        Miss,
         GameOver,
         Clear
     };
@@ -22,6 +30,8 @@ public class GameController : MonoBehaviour {
         this.levelManager = GameObject.FindWithTag("LevelManager");
         this.audioPlayer = GameObject.Find("AudioPlayer").GetComponent<AudioSource>();
         this.initialLevel = this.currentLevel;
+        this.lives[0] = this.initialLife;
+        this.lives[1] = this.initialLife;
         this.Replay();
     }
     
@@ -32,10 +42,44 @@ public class GameController : MonoBehaviour {
             if (this.CheckClear()) {
                 this.Clear();
             }
+        } else if (this.state == GameState.Miss) {
+            this.timer += Time.deltaTime;
+            if (this.timer > 3.0) {
+                this.timer = 0;
+                this.Replay();
+            }
+        } else if (this.state == GameState.Clear) {
+            this.timer += Time.deltaTime;
+            if (this.timer > 6.0) {
+                this.timer = 0;
+                this.NextStage();
+            }
+        }
+        for (int i = 0; i < this.players.Count; ++i) {
+            this.UpdateScore(i);
+        }
+    }
+    
+    void UpdateScore(int player) {
+        if (!this.audioPlayer.isPlaying) {
+            if (this.currentScores[player] < this.targetScores[player]) {
+                AudioClip clip = (AudioClip)Resources.Load ("Sounds/score");
+                this.audioPlayer.PlayOneShot(clip);
+                int sub = this.targetScores[player] - this.currentScores[player];
+                int order = (int)Mathf.Log10(sub);
+                this.currentScores[player] += (int)Mathf.Pow(10, order);
+            } else {
+                this.currentScores[player] = this.targetScores[player];
+            }
         }
     }
     
     void OnGUI () {
+        GUIStyle scoreStyle = new GUIStyle();
+        scoreStyle.fontSize = 36;
+        scoreStyle.alignment = TextAnchor.MiddleCenter;
+        scoreStyle.normal.textColor = Color.yellow;
+        GUI.Label(new Rect(30, 30, 100, 40), this.currentScores[0].ToString(), scoreStyle);
         if (this.state == GameState.GameOver) {
             GUIStyle labelStyle = new GUIStyle();
             labelStyle.fontSize = 64;
@@ -49,15 +93,13 @@ public class GameController : MonoBehaviour {
             int height = Screen.height;
             GUI.Label(new Rect(width / 2 - 300 + 3, height / 2 - 200 + 3, 600, 400), "Game Over", shadowLabelStyle);
             GUI.Label(new Rect(width / 2 - 300, height / 2 - 200, 600, 400), "Game Over", labelStyle);
-            if (GUI.Button( new Rect(width / 2 - 210, height / 2 + 100, 200, 60), "Replay(Space)")) {
-                this.Replay();
-            } else if (GUI.Button( new Rect(width / 2 + 10, height / 2 + 100, 200, 60), "Exit")) {
-                Application.Quit();
-            }
         }
    }
    
     void Replay () {
+        this.players = new List<GameObject>();
+        this.state = GameState.Main;
+        Resources.UnloadUnusedAssets();
         this.levelManager.SendMessage("DestroyLevel");
         GameObject oldRadar = GameObject.FindWithTag("Radar");
         if (oldRadar) {
@@ -67,10 +109,30 @@ public class GameController : MonoBehaviour {
         GameObject radar = (GameObject)Resources.Load("Prefabs/radarPrefab");
         Instantiate(radar, Vector3.zero, Quaternion.identity);
         this.state = GameState.Start;
+        foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
+            this.players.Add(player);
+        }
     }
     
     bool CheckClear () {
         return 0 == GameObject.FindGameObjectsWithTag("Enemy").Length;
+    }
+    
+    void Miss (int player) {
+        if (this.lives[player] > 0) {
+            this.state = GameState.Miss;
+            this.lives[player] -= 1;
+        } else {
+            this.state = GameState.GameOver;
+        }
+    }
+    
+    void NextStage () {
+        this.currentLevel += 1;
+        if (this.currentLevel > this.levelCount) {
+            this.currentLevel = 1;
+        }
+        this.Replay();
     }
     
     void Clear () {
@@ -83,11 +145,16 @@ public class GameController : MonoBehaviour {
         this.state = GameState.GameOver; 
     }
     
-    int GetScore (int player) {
-        return this.scores[player];
+    public int GetScore (int player) {
+        return this.currentScores[player];
     }
     
-    void AddScore (int player, int score) {
-        this.scores[player] += score;
+    public void AddScore (int player, int score) {
+        this.targetScores[player] += score;
+    }
+    
+    public void BombEnemy (List<GameObject> enemies) {
+        int count = enemies.Count;
+        this.AddScore(0, 1000 * (int)Mathf.Pow(2, count));
     }
 }

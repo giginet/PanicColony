@@ -10,6 +10,7 @@ public class Player : MonoBehaviour {
         Death
     };
    
+    public int playerNumber = 0;
     public int rotateThreshold = 150;
     public int rotateSpeed = 5;
     public float speed = 10;
@@ -89,20 +90,24 @@ public class Player : MonoBehaviour {
     }
     
     void Update () {
-        this.controller.SetInputType(Input.GetJoystickNames().Length == 0 ? InputType.Mouse : InputType.JoyStick);
+        //this.controller.SetInputType(Input.GetJoystickNames().Length == 0 ? InputType.Mouse : InputType.JoyStick);
+        this.controller.SetInputType(InputType.JoyStick);
         if (this.canControl) {
             this.Control();
         } 
         if (this.state == PlayerState.DeathAnimation) {
             Transform head = this.transform.Find("head");
-            head.Rotate(Vector3.up * 60);
+            head.Rotate(Vector3.up * ((1.0f - deathTimer) * 120));
             this.deathTimer += Time.deltaTime;
             if (deathTimer > 1.0) {
                 this.state = PlayerState.Death;
                 this.DestroyBody();
                 GameObject controller = GameObject.FindWithTag("GameController");
-                controller.SendMessage("GameOver");
+                controller.SendMessage("Miss", this.playerNumber);
             }
+        }
+        if (this.transform.position.y < -10) {
+            this.Death();
         }
     }
     

@@ -3,6 +3,7 @@ using System.Collections;
 using Pathfinding;
 
 public class Enemy : MonoBehaviour {
+
     enum EnemyState {
         Normal,
         Damage,
@@ -15,10 +16,17 @@ public class Enemy : MonoBehaviour {
     private float shockTime = 0;
     private EnemyState state = 0;
     private AIPath aiPath;
+    private Vector3 initialPosition;
 
     void Awake () {
         this.aiPath = this.gameObject.GetComponent<AIPath>();
         this.aiPath.target = GameObject.FindWithTag("Player").transform;
+        this.initialPosition = this.transform.position;
+    }
+    
+    void Reset (){
+        this.transform.rotation = Quaternion.identity;
+        this.transform.position = this.initialPosition;
     }
     
     void Update () {

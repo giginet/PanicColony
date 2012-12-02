@@ -23,6 +23,8 @@ public class Item : MonoBehaviour {
             GameObject player = GameObject.Find("AudioPlayer");
             AudioClip clip = (AudioClip)Resources.Load("Sounds/get", typeof(AudioClip));
             player.audio.PlayOneShot(clip);
+            GameController controller = GameObject.FindWithTag("GameController").GetComponent<GameController>();
+            controller.AddScore(0, 9999);
             Destroy(gameObject);
         }
     }
