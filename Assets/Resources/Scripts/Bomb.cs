@@ -11,8 +11,8 @@ public class Bomb : MonoBehaviour {
         Room room = manager.GetRoom(this.transform.position);
         if (room == null) {
             radar.SendMessage("SetWarning", room);
-            this.transform.parent = GameObject.FindWithTag("LevelManager").GetComponent<LevelManager>().GetLevelObject().transform;
         }
+        this.transform.parent = manager.GetLevelObject().transform;
     }
     
     void Update () {

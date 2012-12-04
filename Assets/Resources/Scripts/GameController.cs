@@ -28,6 +28,7 @@ public class GameController : MonoBehaviour {
     void Awake () {
         this.state = GameState.Start;
         this.levelManager = GameObject.FindWithTag("LevelManager");
+        this.currentLevel = this.initialLevel;
         this.audioPlayer = GameObject.Find("AudioPlayer").GetComponent<AudioSource>();
         this.initialLevel = this.currentLevel;
         this.lives[0] = this.initialLife;

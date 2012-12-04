@@ -41,7 +41,10 @@ public class Unit {
         foreach (Vector2 floor in this.floors) {
             center += floor;
         }
-        return center / this.floors.Count;
+        center = center / this.floors.Count;
+        center.x = (int)center.x;
+        center.y = (int)center.y;
+        return center;
     }
     
     virtual public bool IsProtect () {

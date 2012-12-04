@@ -206,13 +206,13 @@ public class LevelManager : MonoBehaviour {
         }
     }
     
-    private Vector2 PositionToMatrix (Vector3 position) {
+    public Vector2 PositionToMatrix (Vector3 position) {
         float x = position.x;
         float y = position.z;
         return new Vector2(Mathf.Floor(x / this.WIDTH), Mathf.Floor(-y / this.HEIGHT));
     }
     
-    private Vector3 MatrixToPosition (Vector2 matrix) {
+    public Vector3 MatrixToPosition (Vector2 matrix) {
         return new Vector3 (matrix.x * WIDTH, 0, -matrix.y * HEIGHT);
     }
     
