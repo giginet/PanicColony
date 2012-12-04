@@ -108,11 +108,11 @@ public class JoyStickController : MonoBehaviour {
         } 
     }
     
-    void SetWantedCameraAngle (Vector3 v) {
+    public void SetWantedCameraAngle (Vector3 v) {
         this.wantedCameraAngle = v;
     }
     
-    Vector3 GetWantedCameraAngle () {
+    public Vector3 GetWantedCameraAngle () {
         return this.wantedCameraAngle;
     }
     

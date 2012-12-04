@@ -16,6 +16,7 @@ public class GameController : MonoBehaviour {
     private int [] targetScores = {0, 0};
     private List<GameObject> players;
     private float timer = 0;
+    private Animation2D startAnimation;
 
     public enum GameState {
         Start,
@@ -33,12 +34,21 @@ public class GameController : MonoBehaviour {
         this.initialLevel = this.currentLevel;
         this.lives[0] = this.initialLife;
         this.lives[1] = this.initialLife;
+        this.startAnimation = new Animation2D(new Rect((Screen.width - 800) / 2, (Screen.height - 600) / 2, 800, 600), "UI/Start/start", 57);
         this.Replay();
     }
     
     void Update () { 
         if (this.state == GameState.Start) {
-            this.state = GameState.Main;
+            this.timer += Time.deltaTime;
+            if (timer > 1.0f && !this.startAnimation.IsPlaying()) {
+                this.startAnimation.Play();
+            } else if (timer > 3.0f) {
+                this.timer = 0;
+                this.state = GameState.Main;
+                this.SetCharacterCanMove(true);
+            }
+            this.startAnimation.Update();
         } else if (this.state == GameState.Main) {
             if (this.CheckClear()) {
                 this.Clear();
@@ -80,8 +90,11 @@ public class GameController : MonoBehaviour {
         scoreStyle.fontSize = 36;
         scoreStyle.alignment = TextAnchor.MiddleCenter;
         scoreStyle.normal.textColor = Color.yellow;
-        GUI.Label(new Rect(30, 30, 100, 40), this.currentScores[0].ToString(), scoreStyle);
-        if (this.state == GameState.GameOver) {
+        if (this.state == GameState.Start) {
+            if (this.startAnimation.GetTexture() != null) {
+                GUI.DrawTexture(this.startAnimation.GetRect(), this.startAnimation.GetTexture(), ScaleMode.ScaleToFit, true, this.startAnimation.GetAspectRatio());
+            }
+        } else if (this.state == GameState.GameOver) {
             GUIStyle labelStyle = new GUIStyle();
             labelStyle.fontSize = 64;
             labelStyle.alignment = TextAnchor.MiddleCenter;
@@ -113,6 +126,8 @@ public class GameController : MonoBehaviour {
         foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
             this.players.Add(player);
         }
+        this.startAnimation.Rewind();
+        this.SetCharacterCanMove(false);
     }
     
     bool CheckClear () {
@@ -157,5 +172,14 @@ public class GameController : MonoBehaviour {
     public void BombEnemy (List<GameObject> enemies) {
         int count = enemies.Count;
         this.AddScore(0, 1000 * (int)Mathf.Pow(2, count));
+    }
+    
+    public void SetCharacterCanMove (bool b) {
+        foreach (GameObject enemy in GameObject.FindGameObjectsWithTag("Enemy")) {
+            enemy.SendMessage("SetCanMove", b);
+        }
+        foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
+            player.SendMessage("SetControl", b);
+        }
     }
 }

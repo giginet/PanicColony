@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 
 public class Radar : MonoBehaviour {
+    public GameObject radarCamera = null;
     private Level level;
     private LevelManager levelManager;
     private Dictionary<Vector2, GameObject> tiles;
@@ -18,12 +19,15 @@ public class Radar : MonoBehaviour {
     void Start () {
         this.levelManager = GameObject.FindWithTag("LevelManager").GetComponent<LevelManager>();
         this.transform.position = new Vector3(1000, 0, 1000);
+        this.radarCamera = GameObject.Find("TopCamera");
         this.DestroyRadar(); 
         this.CreateRadar();
     }
     
     void Update () {
         this.UpdateChip();
+        GameObject player = GameObject.FindWithTag("Player");
+        this.radarCamera.transform.position = this.transform.TransformPoint(player.transform.localPosition / levelManager.WIDTH + Vector3.up * 50);
     }
     
     void DestroyRadar () {

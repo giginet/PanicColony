@@ -265,7 +265,7 @@ public class LevelManager : MonoBehaviour {
             List<GameObject> enemies = new List<GameObject>();
             // Send enemies to controller killed by explosion.
             foreach (GameObject enemy in GameObject.FindGameObjectsWithTag("Enemy")) {
-                if (this.level.GetUnit(this.MatrixToPosition(this.transform.position)) == unit) {
+                if (this.level.GetUnit(this.MatrixToPosition(enemy.transform.position)) == unit) {
                     enemy.SendMessage("Death");
                     enemies.Add(enemy);
                 }

@@ -9,7 +9,7 @@ public class Bomb : MonoBehaviour {
         GameObject radar = GameObject.FindWithTag("Radar");
         LevelManager manager = GameObject.FindWithTag("LevelManager").GetComponent<LevelManager>();
         Room room = manager.GetRoom(this.transform.position);
-        if (room == null) {
+        if (room != null) {
             radar.SendMessage("SetWarning", room);
         }
         this.transform.parent = manager.GetLevelObject().transform;

@@ -25,6 +25,8 @@ public class Enemy : MonoBehaviour {
         Escape
     }
     
+    public float normalSpeed = 5.0f;
+    public float fastSpeed = 15.0f;
     public float shockDuration = 3.0f;
     public float rotationSpeed = 2.0f;
     private LevelManager levelManager = null;
@@ -35,10 +37,14 @@ public class Enemy : MonoBehaviour {
     private AIPath aiPath;
     private Vector3 initialPosition;
 
-    void Start () {
+    void Awake () {
         this.aiPath = this.gameObject.GetComponent<AIPath>();
         this.initialPosition = this.transform.position;
         this.levelManager = GameObject.FindWithTag("LevelManager").GetComponent<LevelManager>();
+        this.aiPath.enabled = false;
+    }
+    
+    void Start () {
         this.ChangeTarget();
     }
     
@@ -68,7 +74,7 @@ public class Enemy : MonoBehaviour {
             }
         }
         this.Action();
-        if (this.IsNearTarget()) {
+        if (this.aiPath.target == null || this.IsNearTarget()) {
             this.ChangeTarget();
         }
         Ray ray = new Ray(this.transform.position, this.transform.forward);
@@ -93,16 +99,16 @@ public class Enemy : MonoBehaviour {
     
     private void Action () {
         if (this.actionState == EnemyActionState.Search) {
-            this.aiPath.speed = 5;
+            this.aiPath.speed = this.normalSpeed;
             GameObject player = this.GetSameUnitPlayer();
             if (player != null) {
                 this.actionState = EnemyActionState.Follow;
                 this.ChangeTarget();
             }
         } else if (this.actionState == EnemyActionState.Follow) {
-            this.aiPath.speed = 15;
+            this.aiPath.speed = this.fastSpeed;
             GameObject player = this.GetNearestPlayer();
-            if (player != null && Vector3.Distance(this.transform.position, player.transform.position) > 100) {
+            if (player != null && Vector3.Distance(this.transform.position, player.transform.position) > 50) {
                 this.actionState = EnemyActionState.Search;                
                 this.ChangeTarget();
             }
@@ -167,6 +173,11 @@ public class Enemy : MonoBehaviour {
     public bool IsNearTarget () {
         GameObject target = this.aiPath.target.gameObject;
         return Vector3.Distance(this.transform.position, target.transform.position) < this.levelManager.WIDTH * 2;
+    }
+    
+    public void SetCanMove (bool b) {
+        this.aiPath.enabled = b;
+        this.aiPath.canMove = b;
     }
     
 }

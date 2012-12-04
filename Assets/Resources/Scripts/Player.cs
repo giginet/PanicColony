@@ -21,6 +21,7 @@ public class Player : MonoBehaviour {
     private JoyStickController controller = null;
     private float deathTimer = 0;
     private PlayerState state = PlayerState.Normal;
+    private float preYAxis = 0;
 
     void Start () {
         muzzle = this.gameObject;
@@ -35,12 +36,17 @@ public class Player : MonoBehaviour {
             if (bomb == null) {
                 // place Bomb
                 GameObject bombPrefab = (GameObject)Resources.Load("Prefabs/bombPrefab");
-                bomb = (GameObject)Instantiate(bombPrefab, this.transform.position + this.transform.forward * 1, Quaternion.identity);
+                bomb = (GameObject)Instantiate(bombPrefab, this.transform.position + this.transform.forward * -1, Quaternion.identity);
             } else {
                 bomb.SendMessage("Explode");
                 bomb = null;
             }
         } 
+        float yAxis = Input.GetAxis("Vertical");
+        if (yAxis <= -0.9f && this.preYAxis > -0.9f) {
+            Vector3 wantedAngle = this.controller.GetWantedCameraAngle();
+        }
+        preYAxis = yAxis;
         Vector3 mouse = Input.mousePosition;
         mouse.z = Camera.main.nearClipPlane;
         Vector3 screenPoint = Camera.main.WorldToScreenPoint(this.transform.position);
@@ -53,6 +59,8 @@ public class Player : MonoBehaviour {
                 if (shockEffect == null) {
                     GameObject prefab = (GameObject)Resources.Load("Prefabs/shockEffectPrefab", typeof(GameObject));
                     shockEffect = (GameObject)Instantiate(prefab, this.muzzle.transform.position, Quaternion.identity);
+                    LevelManager manager = GameObject.FindWithTag("LevelManager").GetComponent<LevelManager>();
+                    shockEffect.transform.parent = manager.GetLevelObject().transform;
                 }
                 if (hit.collider.gameObject.CompareTag("Enemy")) {
                     hit.collider.gameObject.SendMessage("Shock");
@@ -122,6 +130,8 @@ public class Player : MonoBehaviour {
     
     void Death () {
         if (this.state != PlayerState.Normal) return;
+        Destroy(shockEffect);
+        shockEffect = null;
         LineRenderer renderer = this.GetComponent<LineRenderer>(); 
         renderer.enabled = false;  
         this.SetControl(false);
@@ -143,8 +153,8 @@ public class Player : MonoBehaviour {
     
     void SetControl (bool c) {
         this.canControl = c;
-        this.GetComponent<CharacterMotor>().canControl = false;
-        this.GetComponent<JoyStickController>().enableLookRotation = false;
+        this.GetComponent<CharacterMotor>().canControl = c;
+        this.GetComponent<JoyStickController>().enableLookRotation = c;
     }
 }
 
