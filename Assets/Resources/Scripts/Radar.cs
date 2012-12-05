@@ -112,10 +112,10 @@ public class Radar : MonoBehaviour {
         }
     }
     
-    public void SetWarning (Room room) {
-        bool enable = room.IsEnable();
-        if (enable && !room.IsProtect()) {
-            room.SetEnable(false);
+    public void SetWarning (Unit unit) {
+        bool enable = unit.IsEnable();
+        if (enable && !unit.IsProtect()) {
+            unit.SetEnable(false);
         }
         foreach (Room other in this.level.GetRooms()) {
             if (!this.level.IsReachFromStart(other, true)) {
@@ -128,7 +128,7 @@ public class Radar : MonoBehaviour {
             }
         }
         if (enable) {
-            room.SetEnable(true);
+            unit.SetEnable(true);
         }
     }
     

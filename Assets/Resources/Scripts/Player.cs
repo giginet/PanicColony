@@ -24,7 +24,7 @@ public class Player : MonoBehaviour {
     private float preYAxis = 0;
 
     void Start () {
-        muzzle = this.gameObject;
+        muzzle = this.transform.Find("muzzle").gameObject;
         this.state = PlayerState.Normal;
         this.controller = this.GetComponent<JoyStickController>();
         this.controller.cameraControl.cameraTransform = Camera.main.transform;
@@ -107,7 +107,7 @@ public class Player : MonoBehaviour {
             Transform head = this.transform.Find("head");
             head.Rotate(Vector3.up * ((1.0f - deathTimer) * 120));
             this.deathTimer += Time.deltaTime;
-            if (deathTimer > 1.0) {
+            if (deathTimer > 2.9) {
                 this.state = PlayerState.Death;
                 this.DestroyBody();
                 GameObject controller = GameObject.FindWithTag("GameController");
@@ -137,9 +137,13 @@ public class Player : MonoBehaviour {
         this.SetControl(false);
         this.audio.volume = 0;
         this.state = PlayerState.DeathAnimation;
+        GameObject.FindWithTag("GameController").SendMessage("PlayMusic", "Sounds/gameover0");
     }
     
     void DestroyBody () {
+        /*Destroy(this.GetComponent<PlatformInputController>());
+        Destroy(this.GetComponent<CharacterMotor>());
+        Destroy(this.GetComponent<CharacterController>());*/
         GameObject head = this.transform.Find("head").gameObject;
         foreach (Transform part in this.transform) {
             part.gameObject.AddComponent("Rigidbody");

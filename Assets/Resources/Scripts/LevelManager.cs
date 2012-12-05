@@ -265,7 +265,7 @@ public class LevelManager : MonoBehaviour {
             List<GameObject> enemies = new List<GameObject>();
             // Send enemies to controller killed by explosion.
             foreach (GameObject enemy in GameObject.FindGameObjectsWithTag("Enemy")) {
-                if (this.level.GetUnit(this.MatrixToPosition(enemy.transform.position)) == unit) {
+                if (this.level.GetUnit(this.PositionToMatrix(enemy.transform.position)) == unit) {
                     enemy.SendMessage("Death");
                     enemies.Add(enemy);
                 }
@@ -276,9 +276,18 @@ public class LevelManager : MonoBehaviour {
         } 
     }
     
+    public void BombRoute (Route route) {
+        this.DestroyUnit(route);
+        this.DestroyIsolatedUnits();
+    }
+    
     public void BombRoom(Room room) {
         if (room.IsProtect()) return;
         this.DestroyRoom(room); 
+        this.DestroyIsolatedUnits();
+    }
+    
+    public void DestroyIsolatedUnits() {
         List<Room> destroyRooms = new List<Room>();
         foreach (Room r in this.level.GetRooms() ) {
             if (!this.level.IsReachFromStart(r, true)) {
@@ -290,8 +299,8 @@ public class LevelManager : MonoBehaviour {
         }
         foreach (Route route in this.level.GetRoutes()) {
             foreach (Vector2 pos in route.GetNeighbors().Keys) {
-                Unit r = route.GetNeighbors()[pos];
-                if (r == room) {  
+                Unit u = route.GetNeighbors()[pos];
+                if (!u.IsEnable()) {  
                     GameObject shutterPrefab = (GameObject)Resources.Load("Prefabs/shutterPrefab", typeof(GameObject)); 
                     GameObject routeTile = this.level.GetObject(pos);
                     this.AddGate(routeTile, shutterPrefab);

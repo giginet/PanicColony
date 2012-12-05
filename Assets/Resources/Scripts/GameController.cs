@@ -6,7 +6,6 @@ public class GameController : MonoBehaviour {
 
     public int initialLevel = 1;
     public int initialLife = 3;
-    public int levelCount = 2;
     private GameState state = GameState.Start;
     private GameObject levelManager = null;
     private AudioSource audioPlayer = null;
@@ -54,9 +53,8 @@ public class GameController : MonoBehaviour {
                 this.Clear();
             }
         } else if (this.state == GameState.Miss) {
-            this.timer += Time.deltaTime;
-            if (this.timer > 3.0) {
-                this.timer = 0;
+            if (Input.GetButtonDown("Start")) {
+                this.PlayMusic("Sounds/gameover1");
                 this.Replay();
             }
         } else if (this.state == GameState.Clear) {
@@ -90,6 +88,7 @@ public class GameController : MonoBehaviour {
         scoreStyle.fontSize = 36;
         scoreStyle.alignment = TextAnchor.MiddleCenter;
         scoreStyle.normal.textColor = Color.yellow;
+        GUI.Label(new Rect(30, 30, 100, 40), this.currentScores[0].ToString(), scoreStyle);
         if (this.state == GameState.Start) {
             if (this.startAnimation.GetTexture() != null) {
                 GUI.DrawTexture(this.startAnimation.GetRect(), this.startAnimation.GetTexture(), ScaleMode.ScaleToFit, true, this.startAnimation.GetAspectRatio());
@@ -111,9 +110,9 @@ public class GameController : MonoBehaviour {
    }
    
     void Replay () {
+        Resources.UnloadUnusedAssets();
         this.players = new List<GameObject>();
         this.state = GameState.Main;
-        Resources.UnloadUnusedAssets();
         this.levelManager.SendMessage("DestroyLevel");
         GameObject oldRadar = GameObject.FindWithTag("Radar");
         if (oldRadar) {
@@ -127,6 +126,7 @@ public class GameController : MonoBehaviour {
             this.players.Add(player);
         }
         this.startAnimation.Rewind();
+        this.timer = 0;
         this.SetCharacterCanMove(false);
     }
     
@@ -145,7 +145,8 @@ public class GameController : MonoBehaviour {
     
     void NextStage () {
         this.currentLevel += 1;
-        if (this.currentLevel > this.levelCount) {
+        TextAsset stage = (TextAsset)Resources.Load ("Levels/Level" + this.currentLevel.ToString());
+        if (stage == null) {
             this.currentLevel = 1;
         }
         this.Replay();
@@ -171,7 +172,9 @@ public class GameController : MonoBehaviour {
     
     public void BombEnemy (List<GameObject> enemies) {
         int count = enemies.Count;
-        this.AddScore(0, 1000 * (int)Mathf.Pow(2, count));
+        if (count > 0) {
+            this.AddScore(0, 1000 * (int)Mathf.Pow(2, count - 1));
+        }
     }
     
     public void SetCharacterCanMove (bool b) {
@@ -181,5 +184,10 @@ public class GameController : MonoBehaviour {
         foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
             player.SendMessage("SetControl", b);
         }
+    }
+    
+    public void PlayMusic (string fileName) {
+        AudioClip clip = (AudioClip)Resources.Load (fileName);
+        this.audioPlayer.PlayOneShot(clip);
     }
 }
