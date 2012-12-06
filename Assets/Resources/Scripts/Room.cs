@@ -7,7 +7,7 @@ public class Room : Unit {
     private bool protect = false;
     
     public Room () {
-        this.neighbors = new Dictionary<Vector2, Unit>();
+        this.neighbors = new List<KeyValuePair<Vector2, Unit>>();
         this.floors = new List<Vector2>();
         this.enable = true;
         walls = new List<Vector2>();

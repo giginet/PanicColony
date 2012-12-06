@@ -88,6 +88,7 @@ public class Enemy : MonoBehaviour {
     
     public void Shock() {
         this.state = EnemyState.Shocking;
+        this.actionState = EnemyActionState.Follow;
         this.shockTime = 0;
     }
     

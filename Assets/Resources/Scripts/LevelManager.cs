@@ -298,12 +298,15 @@ public class LevelManager : MonoBehaviour {
             this.DestroyRoom(r); 
         }
         foreach (Route route in this.level.GetRoutes()) {
-            foreach (Vector2 pos in route.GetNeighbors().Keys) {
-                Unit u = route.GetNeighbors()[pos];
+            foreach (KeyValuePair<Vector2, Unit> pair in route.GetNeighbors()) {
+                Vector2 pos = pair.Key;
+                Unit u = pair.Value;
                 if (!u.IsEnable()) {  
                     GameObject shutterPrefab = (GameObject)Resources.Load("Prefabs/shutterPrefab", typeof(GameObject)); 
                     GameObject routeTile = this.level.GetObject(pos);
-                    this.AddGate(routeTile, shutterPrefab);
+                    if (routeTile != null) {
+                        this.AddGate(routeTile, shutterPrefab);
+                    }
                 }
             }
             if (!this.level.IsReachFromStart(route, true)) {

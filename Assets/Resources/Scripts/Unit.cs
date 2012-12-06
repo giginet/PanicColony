@@ -4,13 +4,13 @@ using System.Collections.Generic;
 
 public class Unit {
     
-    protected Dictionary<Vector2, Unit> neighbors;
+    protected List< KeyValuePair<Vector2, Unit> > neighbors;
     protected List<Vector2> floors;
     protected bool enable = true;
     
     public Unit () {
         this.floors = new List<Vector2>();
-        this.neighbors = new Dictionary<Vector2, Unit>();
+        this.neighbors = new List<KeyValuePair<Vector2, Unit>>();
         this.enable = true;
     }
     
@@ -52,17 +52,19 @@ public class Unit {
     }
     
     public void AddNeighbor (Vector2 position, Unit neighbor) {
-        this.neighbors.Add(position, neighbor);
+        KeyValuePair<Vector2, Unit> pair = new KeyValuePair<Vector2, Unit>(position, neighbor);
+        this.neighbors.Add(pair);
     }
     
-    public Dictionary<Vector2, Unit> GetNeighbors () {
+    public List< KeyValuePair<Vector2, Unit> > GetNeighbors () {
         return this.neighbors;
     }
     
     public List<Unit> GetNeighborUnits (bool enableOnly) {
         List<Unit> neighborUnits = new List<Unit>();
         if (this.IsEnable() || !enableOnly ) {
-            foreach (Unit neighbor in this.neighbors.Values) {
+            foreach (KeyValuePair<Vector2, Unit> pair in this.neighbors) {
+                Unit neighbor = pair.Value;
                 if (neighbor.IsEnable() || !enableOnly) {
                     neighborUnits.Add(neighbor);
                 }

@@ -113,6 +113,7 @@ public class Radar : MonoBehaviour {
     }
     
     public void SetWarning (Unit unit) {
+        if (unit.IsProtect()) return;
         bool enable = unit.IsEnable();
         if (enable && !unit.IsProtect()) {
             unit.SetEnable(false);

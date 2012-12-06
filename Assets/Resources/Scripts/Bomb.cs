@@ -9,12 +9,7 @@ public class Bomb : MonoBehaviour {
         GameObject radar = GameObject.FindWithTag("Radar");
         LevelManager manager = GameObject.FindWithTag("LevelManager").GetComponent<LevelManager>();
         Room room = manager.GetRoom(this.transform.position);
-        if (room == null) {
-            Route route = manager.GetLevel().GetRoute(manager.PositionToMatrix(this.transform.position));
-            if (route != null) {
-                radar.SendMessage("SetWarning", route);
-            }
-        } else {
+        if (room != null && !room.IsProtect()) {
             radar.SendMessage("SetWarning", room);
         }
         this.transform.parent = manager.GetLevelObject().transform;
@@ -40,14 +35,6 @@ public class Bomb : MonoBehaviour {
             GameObject explosionPrefab = (GameObject)Resources.Load("Prefabs/bombExplosionPrefab");
             Instantiate(explosionPrefab, this.transform.position, Quaternion.identity);
             manager.BombRoom(room);
-        } else {
-            
-            Route route = manager.GetLevel().GetRoute(manager.PositionToMatrix(this.transform.position));
-            if (route != null && !route.IsProtect()) {
-                GameObject explosionPrefab = (GameObject)Resources.Load("Prefabs/bombExplosionPrefab");
-                Instantiate(explosionPrefab, this.transform.position, Quaternion.identity);
-                manager.BombRoute(route);
-            }
         }
         Destroy(gameObject);
     }
