@@ -73,29 +73,49 @@ public class LevelManager : MonoBehaviour {
                 }
             } else if (level.IsWall(x, y)) {
                 GameObject wallPrefab = null;
-                GameObject wall = null;
-                if (level.IsFloor(x - 1, y) ^ level.IsFloor(x + 1, y)) {
-                    wallPrefab = (GameObject)Resources.Load ("Prefabs/curveWallPrefab", typeof(GameObject));
-                    wall = (GameObject)Instantiate (wallPrefab, position, Quaternion.identity);
+                GameObject wall = null;               
+                bool isCurve = false;
+                bool isCorner = false;
+                if (c == '#') {
+                    if ((level.IsWall(x + 1, y) && level.IsWall(x, y + 1)) || 
+                        (level.IsWall(x + 1, y) && level.IsWall(x, y - 1)) || 
+                        (level.IsWall(x - 1, y) && level.IsWall(x, y + 1)) || 
+                        (level.IsWall(x - 1, y) && level.IsWall(x, y - 1)) ) {
+                        wallPrefab = (GameObject)Resources.Load ("Prefabs/cornerWallPrefab", typeof(GameObject));
+                        isCorner = true;
+                    } else if (level.IsFloor(x - 1, y) ^ level.IsFloor(x + 1, y)) {
+                        wallPrefab = (GameObject)Resources.Load ("Prefabs/curveWallPrefab", typeof(GameObject));
+                        isCurve = true;   
+                    } else {
+                        // Normal Wall
+                        wallPrefab = (GameObject)Resources.Load ("Prefabs/wallPrefab", typeof(GameObject));
+                    }
+                } else if (char.IsLower(c)) {
+                    // corner Wall
+                    wallPrefab = (GameObject)Resources.Load ("Prefabs/switchWallPrefab", typeof(GameObject));
+                } else if (c == '$') {
+                    // Broken Wall
+                    wallPrefab = (GameObject)Resources.Load ("Prefabs/brokenWallPrefab", typeof(GameObject));
+                }
+                wall = (GameObject)Instantiate (wallPrefab, position, Quaternion.identity);
+                if (isCurve) {
                     if (level.IsFloor(x - 1, y)) {
                         wall.transform.Rotate (new Vector3 (0, 180, 0));
                     }
                 } else {
-                    if (c == '#') {
-                        // Normal Wall
-                        wallPrefab = (GameObject)Resources.Load ("Prefabs/wallPrefab", typeof(GameObject));
-                    } else if (char.IsLower(c)) {
-                        wallPrefab = (GameObject)Resources.Load ("Prefabs/switchWallPrefab", typeof(GameObject));
-                    } else if (c == '$') {
-                        // Broken Wall
-                        wallPrefab = (GameObject)Resources.Load ("Prefabs/brokenWallPrefab", typeof(GameObject));
-                    }
-                    wall = (GameObject)Instantiate (wallPrefab, position + Vector3.up * 6, Quaternion.identity);
-                    if (level.IsFloor(x, y - 1) || level.IsFloor(x - 1, y - 1) || level.IsFloor(x + 1, y - 1) ) {
-                        wall.transform.Translate(Vector3.forward * (this.HEIGHT / 2.0f - 0.1f));
-                    } else if (level.IsFloor(x, y + 1) || level.IsFloor(x - 1, y + 1) || level.IsFloor(x + 1, y + 1) ) {
-                        wall.transform.Translate(Vector3.forward * -(this.HEIGHT / 2.0f - 0.1f));
-                        wall.transform.Rotate(Vector3.up * 180);
+                    if (isCorner) {
+                        if (level.IsFloor(x, y - 1) || level.IsWall(x, y - 1)) {
+                            wall.transform.Translate(Vector3.forward * -0.1f);
+                        } else if (level.IsFloor(x, y + 1) || level.IsWall(x, y + 1)) {
+                            wall.transform.Translate(Vector3.forward * 0.1f);
+                        }
+                    } else {
+                        if (level.IsFloor(x, y - 1) || level.IsFloor(x - 1, y - 1) || level.IsFloor(x + 1, y - 1) ) {
+                            wall.transform.Translate(Vector3.forward * (this.HEIGHT / 2.0f - 0.1f));
+                        } else if (level.IsFloor(x, y + 1) || level.IsFloor(x - 1, y + 1) || level.IsFloor(x + 1, y + 1) ) {
+                            wall.transform.Translate(Vector3.forward * -(this.HEIGHT / 2.0f - 0.1f));
+                            wall.transform.Rotate(Vector3.up * 180);
+                        }
                     }
                 }
                 wall.transform.parent = levelObject.transform;
