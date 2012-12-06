@@ -74,6 +74,7 @@ public class LevelManager : MonoBehaviour {
             } else if (level.IsWall(x, y)) {
                 GameObject wallPrefab = null;
                 GameObject wall = null;               
+                bool isHorizontal = level.IsFloor(x - 1, y) ^ level.IsFloor(x + 1, y);
                 bool isCurve = false;
                 bool isCorner = false;
                 if (c == '#') {
@@ -83,7 +84,7 @@ public class LevelManager : MonoBehaviour {
                         (level.IsWall(x - 1, y) && level.IsWall(x, y - 1)) ) {
                         wallPrefab = (GameObject)Resources.Load ("Prefabs/cornerWallPrefab", typeof(GameObject));
                         isCorner = true;
-                    } else if (level.IsFloor(x - 1, y) ^ level.IsFloor(x + 1, y)) {
+                    } else if (isHorizontal) {
                         wallPrefab = (GameObject)Resources.Load ("Prefabs/curveWallPrefab", typeof(GameObject));
                         isCurve = true;   
                     } else {
@@ -96,6 +97,9 @@ public class LevelManager : MonoBehaviour {
                 } else if (c == '$') {
                     // Broken Wall
                     wallPrefab = (GameObject)Resources.Load ("Prefabs/brokenWallPrefab", typeof(GameObject));
+                } else if (c == '%') {
+                    // Window Wall
+                    wallPrefab = (GameObject)Resources.Load ("Prefabs/windowWallPrefab", typeof(GameObject));
                 }
                 wall = (GameObject)Instantiate (wallPrefab, position, Quaternion.identity);
                 if (isCurve) {
