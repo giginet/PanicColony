@@ -22,6 +22,7 @@ public class Player : MonoBehaviour {
     private float deathTimer = 0;
     private PlayerState state = PlayerState.Normal;
     private float preYAxis = 0;
+    private GameObject head = null;
 
     void Start () {
         muzzle = this.transform.Find("muzzle").gameObject;
@@ -29,6 +30,7 @@ public class Player : MonoBehaviour {
         this.controller = this.GetComponent<JoyStickController>();
         this.controller.cameraControl.cameraTransform = Camera.main.transform;
         this.controller.cameraControl.cameraTransform.position = this.transform.position;
+        this.head = this.transform.Find("Armature/Bone/hip_0/chest_0/head").gameObject;
     }
     
     void Control () {
@@ -104,8 +106,7 @@ public class Player : MonoBehaviour {
             this.Control();
         } 
         if (this.state == PlayerState.DeathAnimation) {
-            Transform head = this.transform.Find("head");
-            head.Rotate(Vector3.up * ((1.0f - deathTimer) * 120));
+            this.head.transform.Rotate(Vector3.right * ((1.0f - deathTimer) * 120));
             this.deathTimer += Time.deltaTime;
             if (deathTimer > 2.9) {
                 this.state = PlayerState.Death;
@@ -144,7 +145,7 @@ public class Player : MonoBehaviour {
         /*Destroy(this.GetComponent<PlatformInputController>());
         Destroy(this.GetComponent<CharacterMotor>());
         Destroy(this.GetComponent<CharacterController>());*/
-        GameObject head = this.transform.Find("head").gameObject;
+        Destroy(this.transform.Find ("Armature").gameObject);
         foreach (Transform part in this.transform) {
             part.gameObject.AddComponent("Rigidbody");
             if (part.GetComponent<BoxCollider>() != null) {
@@ -152,13 +153,13 @@ public class Player : MonoBehaviour {
             }
             part.rigidbody.velocity = Random.onUnitSphere;
         }
-        head.rigidbody.velocity = Vector3.back;
     }
     
     void SetControl (bool c) {
         this.canControl = c;
         this.GetComponent<CharacterMotor>().canControl = c;
         this.GetComponent<JoyStickController>().enableLookRotation = c;
+        if (!c) this.audio.volume = 0;
     }
 }
 

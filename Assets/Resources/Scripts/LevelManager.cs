@@ -21,7 +21,7 @@ public class LevelManager : MonoBehaviour {
      * @param int levelNo
      * @return Level
      **/
-    private void CreateLevel (int levelNo) {
+    public void CreateLevel (int levelNo, List<Enemy> ignoreEnemies) {
         Dictionary<Vector2, char> charMap = new Dictionary<Vector2, char>(); 
         TextAsset asset = (TextAsset)Resources.Load ("Levels/Level" + levelNo.ToString (), typeof(TextAsset));
         levelObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -129,10 +129,21 @@ public class LevelManager : MonoBehaviour {
                 GameObject player = (GameObject)Instantiate(prefab, position + Vector3.up, Quaternion.identity);
                 player.transform.parent = levelObject.transform;
                 this.level.AddStartPoint(p);
-            } else if (c == '!') {
-                GameObject enemyPrefab = (GameObject)Resources.Load ("Prefabs/enemyPrefab", typeof(GameObject));
-                GameObject enemy = (GameObject)Instantiate (enemyPrefab, position + Vector3.up * 6, Quaternion.identity);
-                enemy.transform.parent = levelObject.transform;
+            } else if (c == '!' || c == '?') {
+                string prefabName = "enemyPrefab";
+                if (c == '?') prefabName = "bombEnemyPrefab";
+                bool ignore = false;
+                foreach (Enemy enemy in ignoreEnemies) {
+                    if (enemy.GetInitialPosition() == p) {
+                        ignore = true;
+                        break;
+                    }
+                }
+                if (!ignore) {
+                    GameObject enemyPrefab = (GameObject)Resources.Load ("Prefabs/" + prefabName, typeof(GameObject));
+                    GameObject enemy = (GameObject)Instantiate (enemyPrefab, position + Vector3.up * 6, Quaternion.identity);
+                    enemy.transform.parent = levelObject.transform;
+                }
             }
         }
         this.CreateRooms();
@@ -233,7 +244,7 @@ public class LevelManager : MonoBehaviour {
     public Vector2 PositionToMatrix (Vector3 position) {
         float x = position.x;
         float y = position.z;
-        return new Vector2(Mathf.Floor(x / this.WIDTH), Mathf.Floor(-y / this.HEIGHT));
+        return new Vector2(Mathf.Round(x / this.WIDTH), Mathf.Round(-y / this.HEIGHT));
     }
     
     public Vector3 MatrixToPosition (Vector2 matrix) {
@@ -372,6 +383,11 @@ public class LevelManager : MonoBehaviour {
     public Room GetRoom (Vector3 position) {
         Vector2 p = this.PositionToMatrix (position);
         return this.level.GetRoom(p);
+    }
+    
+    public Unit GetUnit (Vector3 position) {
+        Vector2 p = this.PositionToMatrix (position);
+        return this.level.GetUnit(p);
     }
     
     public void AddGate (GameObject routeTile, GameObject prefab) {

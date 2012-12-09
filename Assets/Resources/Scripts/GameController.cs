@@ -16,6 +16,12 @@ public class GameController : MonoBehaviour {
     private List<GameObject> players;
     private float timer = 0;
     private Animation2D startAnimation;
+    private List<Enemy> bombEnemies; 
+    
+    private Texture2D scoreLabelTexture = null;
+    private Texture2D stageLabelTexture = null;
+    private NumberTexture scoreNumberTexture = null;
+    private NumberTexture stageNumberTexture = null;
 
     public enum GameState {
         Start,
@@ -26,6 +32,11 @@ public class GameController : MonoBehaviour {
     };
 
     void Awake () {
+        this.scoreLabelTexture = (Texture2D)Resources.Load("UI/score");
+        this.stageLabelTexture = (Texture2D)Resources.Load("UI/stage");
+        this.scoreNumberTexture = new NumberTexture("UI/numbers", 37, 50);
+        this.stageNumberTexture = new NumberTexture("UI/numbers", 37, 50);
+        
         this.state = GameState.Start;
         this.levelManager = GameObject.FindWithTag("LevelManager");
         this.currentLevel = this.initialLevel;
@@ -34,6 +45,7 @@ public class GameController : MonoBehaviour {
         this.lives[0] = this.initialLife;
         this.lives[1] = this.initialLife;
         this.startAnimation = new Animation2D(new Rect((Screen.width - 800) / 2, (Screen.height - 600) / 2, 800, 600), "UI/Start/start", 57);
+        this.bombEnemies = new List<Enemy>();
         this.Replay();
     }
     
@@ -72,11 +84,15 @@ public class GameController : MonoBehaviour {
     void UpdateScore(int player) {
         if (!this.audioPlayer.isPlaying) {
             if (this.currentScores[player] < this.targetScores[player]) {
-                AudioClip clip = (AudioClip)Resources.Load ("Sounds/score");
-                this.audioPlayer.PlayOneShot(clip);
+                //AudioClip clip = (AudioClip)Resources.Load ("Sounds/score");
+                //this.audioPlayer.PlayOneShot(clip);
                 int sub = this.targetScores[player] - this.currentScores[player];
                 int order = (int)Mathf.Log10(sub);
-                this.currentScores[player] += (int)Mathf.Pow(10, order);
+                if (order > 0) {
+                    this.currentScores[player] += (int)Mathf.Pow(10, order - 1);
+                } else {
+                    this.currentScores[player] += 1;
+                }
             } else {
                 this.currentScores[player] = this.targetScores[player];
             }
@@ -84,11 +100,12 @@ public class GameController : MonoBehaviour {
     }
     
     void OnGUI () {
-        GUIStyle scoreStyle = new GUIStyle();
-        scoreStyle.fontSize = 36;
-        scoreStyle.alignment = TextAnchor.MiddleCenter;
-        scoreStyle.normal.textColor = Color.yellow;
-        GUI.Label(new Rect(30, 30, 100, 40), this.currentScores[0].ToString(), scoreStyle);
+        GUI.DrawTexture(new Rect(30, 30, this.stageLabelTexture.width / 2.0f, this.stageLabelTexture.height / 2.0f), this.stageLabelTexture, ScaleMode.ScaleToFit, true, this.stageLabelTexture.width / this.stageLabelTexture.height);
+        this.stageNumberTexture.SetScale(0.75f);
+        this.stageNumberTexture.Draw(new Vector2(30 + this.stageLabelTexture.width / 2.0f + 15, 27), this.currentLevel);
+        GUI.DrawTexture(new Rect(280, 30, this.scoreLabelTexture.width / 2.0f, this.scoreLabelTexture.height / 2.0f), this.scoreLabelTexture, ScaleMode.ScaleToFit, true, this.scoreLabelTexture.width / this.scoreLabelTexture.height);
+        this.scoreNumberTexture.SetScale(0.70f);
+        this.scoreNumberTexture.Draw(new Vector2(280 + this.scoreLabelTexture.width / 2.0f + 15, 28), this.currentScores[0]);
         if (this.state == GameState.Start) {
             if (this.startAnimation.GetTexture() != null) {
                 GUI.DrawTexture(this.startAnimation.GetRect(), this.startAnimation.GetTexture(), ScaleMode.ScaleToFit, true, this.startAnimation.GetAspectRatio());
@@ -118,7 +135,7 @@ public class GameController : MonoBehaviour {
         if (oldRadar) {
             Destroy(oldRadar);
         }
-        this.levelManager.SendMessage("CreateLevel", this.currentLevel);
+        this.levelManager.GetComponent<LevelManager>().CreateLevel(this.currentLevel, this.bombEnemies);
         GameObject radar = (GameObject)Resources.Load("Prefabs/radarPrefab");
         Instantiate(radar, Vector3.zero, Quaternion.identity);
         this.state = GameState.Start;
@@ -145,6 +162,7 @@ public class GameController : MonoBehaviour {
     
     void NextStage () {
         this.currentLevel += 1;
+        this.bombEnemies = new List<Enemy>();
         TextAsset stage = (TextAsset)Resources.Load ("Levels/Level" + this.currentLevel.ToString());
         if (stage == null) {
             this.currentLevel = 1;
@@ -174,6 +192,10 @@ public class GameController : MonoBehaviour {
         int count = enemies.Count;
         if (count > 0) {
             this.AddScore(0, 1000 * (int)Mathf.Pow(2, count - 1));
+        }
+        foreach (GameObject enemy in enemies) {
+            Enemy component = enemy.GetComponent<Enemy>();
+            this.bombEnemies.Add (component);
         }
     }
     

@@ -6,13 +6,7 @@ public class Bomb : MonoBehaviour {
 
     void Start () {
         this.animation.Play("setup");
-        GameObject radar = GameObject.FindWithTag("Radar");
-        LevelManager manager = GameObject.FindWithTag("LevelManager").GetComponent<LevelManager>();
-        Room room = manager.GetRoom(this.transform.position);
-        if (room != null && !room.IsProtect()) {
-            radar.SendMessage("SetWarning", room);
-        }
-        this.transform.parent = manager.GetLevelObject().transform;
+        this.SendMessage("UpdateRadar"); 
     }
     
     void Update () {
@@ -26,16 +20,5 @@ public class Bomb : MonoBehaviour {
             this.animation.Stop("setup");
         }
     
-    }
- 
-    void Explode () {
-        LevelManager manager = GameObject.FindWithTag("LevelManager").GetComponent<LevelManager>();
-        Room room = manager.GetRoom(this.transform.position);
-        if (room != null && !room.IsProtect()) {
-            GameObject explosionPrefab = (GameObject)Resources.Load("Prefabs/bombExplosionPrefab");
-            Instantiate(explosionPrefab, this.transform.position, Quaternion.identity);
-            manager.BombRoom(room);
-        }
-        Destroy(gameObject);
-    }
+    } 
 }

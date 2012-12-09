@@ -73,6 +73,7 @@ public class Radar : MonoBehaviour {
                 if (chips.ContainsKey(obj)) {
                     GameObject chip = this.chips[obj];
                     chip.transform.localPosition = obj.transform.localPosition / levelManager.WIDTH; 
+                    chip.transform.localRotation = obj.transform.localRotation;
                 } else {
                     GameObject prefab = (GameObject)Resources.Load("Prefabs/Radar/" + name.ToLower() + "RadarPrefab", typeof(GameObject));
                     this.AddChip(obj, prefab);
