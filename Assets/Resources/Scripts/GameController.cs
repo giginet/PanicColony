@@ -6,6 +6,8 @@ public class GameController : MonoBehaviour {
 
     public int initialLevel = 1;
     public int initialLife = 3;
+    public int vegetableBorder = 3;
+    
     private GameState state = GameState.Start;
     private GameObject levelManager = null;
     private AudioSource audioPlayer = null;
@@ -20,8 +22,11 @@ public class GameController : MonoBehaviour {
     
     private Texture2D scoreLabelTexture = null;
     private Texture2D stageLabelTexture = null;
+    private Texture2D lifeTexture = null;
     private NumberTexture scoreNumberTexture = null;
     private NumberTexture stageNumberTexture = null;
+    
+    private bool isVegetableSetted = false;
 
     public enum GameState {
         Start,
@@ -34,6 +39,7 @@ public class GameController : MonoBehaviour {
     void Awake () {
         this.scoreLabelTexture = (Texture2D)Resources.Load("UI/score");
         this.stageLabelTexture = (Texture2D)Resources.Load("UI/stage");
+        this.lifeTexture = (Texture2D)Resources.Load ("UI/life");
         this.scoreNumberTexture = new NumberTexture("UI/numbers", 37, 50);
         this.stageNumberTexture = new NumberTexture("UI/numbers", 37, 50);
         
@@ -84,8 +90,10 @@ public class GameController : MonoBehaviour {
     void UpdateScore(int player) {
         if (!this.audioPlayer.isPlaying) {
             if (this.currentScores[player] < this.targetScores[player]) {
-                //AudioClip clip = (AudioClip)Resources.Load ("Sounds/score");
-                //this.audioPlayer.PlayOneShot(clip);
+                AudioClip clip = (AudioClip)Resources.Load ("Sounds/score");
+                if (!this.audioPlayer.isPlaying) {
+                    this.audioPlayer.PlayOneShot(clip);
+                }
                 int sub = this.targetScores[player] - this.currentScores[player];
                 int order = (int)Mathf.Log10(sub);
                 if (order > 0) {
@@ -106,6 +114,9 @@ public class GameController : MonoBehaviour {
         GUI.DrawTexture(new Rect(280, 30, this.scoreLabelTexture.width / 2.0f, this.scoreLabelTexture.height / 2.0f), this.scoreLabelTexture, ScaleMode.ScaleToFit, true, this.scoreLabelTexture.width / this.scoreLabelTexture.height);
         this.scoreNumberTexture.SetScale(0.70f);
         this.scoreNumberTexture.Draw(new Vector2(280 + this.scoreLabelTexture.width / 2.0f + 15, 28), this.currentScores[0]);
+        for (int i = 0; i <this.lives[0]; ++i) {
+            GUI.DrawTexture(new Rect(30, 80 + (this.lifeTexture.height / 2.0f + 10) * i, this.lifeTexture.width / 2.0f, this.lifeTexture.height / 2.0f), this.lifeTexture);       
+        }
         if (this.state == GameState.Start) {
             if (this.startAnimation.GetTexture() != null) {
                 GUI.DrawTexture(this.startAnimation.GetRect(), this.startAnimation.GetTexture(), ScaleMode.ScaleToFit, true, this.startAnimation.GetAspectRatio());
@@ -163,6 +174,7 @@ public class GameController : MonoBehaviour {
     void NextStage () {
         this.currentLevel += 1;
         this.bombEnemies = new List<Enemy>();
+        this.isVegetableSetted = false;
         TextAsset stage = (TextAsset)Resources.Load ("Levels/Level" + this.currentLevel.ToString());
         if (stage == null) {
             this.currentLevel = 1;
@@ -191,11 +203,27 @@ public class GameController : MonoBehaviour {
     public void BombEnemy (List<GameObject> enemies) {
         int count = enemies.Count;
         if (count > 0) {
-            this.AddScore(0, 1000 * (int)Mathf.Pow(2, count - 1));
+            this.AddScore(0, 1000 * (int)Mathf.Pow(2, count));
         }
         foreach (GameObject enemy in enemies) {
             Enemy component = enemy.GetComponent<Enemy>();
             this.bombEnemies.Add (component);
+        }
+        // Add Vegetable to start Point
+        if (!this.isVegetableSetted && this.bombEnemies.Count >= this.vegetableBorder) {
+            LevelManager manager = this.levelManager.GetComponent<LevelManager>();
+            Vector2 pos = manager.GetLevel().GetStartPoint(0);
+            GameObject prefab;
+            if (this.currentLevel % 3 == 1) {
+                prefab = (GameObject)Resources.Load("Prefabs/eggplantPrefab", typeof(GameObject));
+            } else if (this.currentLevel % 3 == 2) {
+                prefab = (GameObject)Resources.Load("Prefabs/turnipPrefab", typeof(GameObject));
+            } else {
+                prefab = (GameObject)Resources.Load("Prefabs/carrotPrefab", typeof(GameObject));
+            }
+            this.isVegetableSetted = true;
+            GameObject vegetable = (GameObject)Instantiate(prefab, manager.MatrixToPosition(pos), Quaternion.identity);
+            vegetable.transform.parent = manager.GetLevelObject().transform;
         }
     }
     
@@ -209,7 +237,12 @@ public class GameController : MonoBehaviour {
     }
     
     public void PlayMusic (string fileName) {
+        this.audioPlayer.Stop();
         AudioClip clip = (AudioClip)Resources.Load (fileName);
         this.audioPlayer.PlayOneShot(clip);
+    }
+    
+    public int GetCurrentLevel () {
+        return this.currentLevel;
     }
 }

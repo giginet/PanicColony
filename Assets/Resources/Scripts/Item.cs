@@ -1,8 +1,10 @@
 using UnityEngine;
 using System.Collections;
 
+[RequireComponent (typeof (AudioSource))]
 public class Item : MonoBehaviour {
     public float rotateSpeed = 1.0f;
+    public int baseScore = 500;
 
     // Use this for initialization
     void Start () {
@@ -24,8 +26,10 @@ public class Item : MonoBehaviour {
             AudioClip clip = (AudioClip)Resources.Load("Sounds/get", typeof(AudioClip));
             player.audio.PlayOneShot(clip);
             GameController controller = GameObject.FindWithTag("GameController").GetComponent<GameController>();
-            controller.AddScore(0, 9999);
+            int score = controller.GetCurrentLevel() * this.baseScore;
+            controller.AddScore(0, score);
             Destroy(gameObject);
         }
     }
 }
+

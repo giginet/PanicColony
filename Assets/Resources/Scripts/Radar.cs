@@ -59,6 +59,9 @@ public class Radar : MonoBehaviour {
                 this.AddChip(obj, prefab);
             }
         }
+        foreach (Route route in this.level.GetRoutes()) {
+            this.SetUnitColor(route, FloorColor.Protected);
+        }
         foreach (Room room in this.level.GetRooms()) {
             if (room.IsProtect()) {
                 this.SetUnitColor(room, FloorColor.Protected);

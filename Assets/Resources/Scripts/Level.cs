@@ -98,6 +98,10 @@ public class Level {
         return startRooms;
     }
     
+    public Vector2 GetStartPoint (int i) {
+        return this.startPoints[i];
+    }
+    
     public Room GetRoom (Vector2 position) {
         foreach (Room room in this.rooms) {
             if (room.ContainsFloor((int)position.x, (int)position.y) || room.ContainsWall((int)position.x, (int)position.y)) {
