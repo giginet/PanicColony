@@ -73,7 +73,11 @@ public class GameController : MonoBehaviour {
         } else if (this.state == GameState.Miss) {
             if (Input.GetButtonDown("Start")) {
                 this.PlayMusic("Sounds/gameover1");
-                this.Replay();
+                if (GameObject.FindGameObjectsWithTag("Enemy").Length == 0) {
+                    this.NextStage();
+                } else {
+                    this.Replay();
+                }
             }
         } else if (this.state == GameState.Clear) {
             this.timer += Time.deltaTime;
@@ -203,7 +207,7 @@ public class GameController : MonoBehaviour {
     public void BombEnemy (List<GameObject> enemies) {
         int count = enemies.Count;
         if (count > 0) {
-            this.AddScore(0, 1000 * (int)Mathf.Pow(2, count));
+            this.AddScore(0, count * 1000 * (int)Mathf.Pow(2, count - 1));
         }
         foreach (GameObject enemy in enemies) {
             Enemy component = enemy.GetComponent<Enemy>();

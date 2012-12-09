@@ -23,133 +23,165 @@ public class Player : MonoBehaviour {
     private PlayerState state = PlayerState.Normal;
     private float preYAxis = 0;
     private GameObject head = null;
+    private LineRenderer renderer = null;
+    private float shootingTimer = 0.0f;
+    private bool isShooting = false;
 
     void Start () {
-        muzzle = this.transform.Find("muzzle").gameObject;
+        this.muzzle = this.transform.Find ("Armature/Bone/hip_0/chest_0/arm_R_0/forearm_R/muzzle").gameObject;
         this.state = PlayerState.Normal;
-        this.controller = this.GetComponent<JoyStickController>();
+        this.controller = this.GetComponent<JoyStickController> ();
         this.controller.cameraControl.cameraTransform = Camera.main.transform;
         this.controller.cameraControl.cameraTransform.position = this.transform.position;
-        this.head = this.transform.Find("Armature/Bone/hip_0/chest_0/head").gameObject;
+        this.head = this.transform.Find ("Armature/Bone/hip_0/chest_0/head").gameObject;
+        this.renderer = this.GetComponent<LineRenderer> (); 
     }
     
-    void Control () {
-        if (Input.GetButtonDown("Bomb0") ) {
+    void AttachBomb () {
+        // Attach Bomb
+        if (Input.GetButtonDown ("Bomb0")) {
             if (bomb == null) {
                 // place Bomb
-                GameObject bombPrefab = (GameObject)Resources.Load("Prefabs/bombPrefab");
-                bomb = (GameObject)Instantiate(bombPrefab, this.transform.position + this.transform.forward * -1, Quaternion.identity);
+                GameObject bombPrefab = (GameObject)Resources.Load ("Prefabs/bombPrefab");
+                this.animation.Play ("attach");
+                bomb = (GameObject)Instantiate (bombPrefab, this.transform.position + this.transform.forward * 1, Quaternion.identity);
             } else {
-                bomb.SendMessage("Explode");
+                bomb.SendMessage ("Explode");
                 bomb = null;
             }
-        } 
-        float yAxis = Input.GetAxis("Vertical");
-        if (yAxis <= -0.9f && this.preYAxis > -0.9f) {
-            Vector3 wantedAngle = this.controller.GetWantedCameraAngle();
         }
-        preYAxis = yAxis;
-        Vector3 mouse = Input.mousePosition;
-        mouse.z = Camera.main.nearClipPlane;
-        Vector3 screenPoint = Camera.main.WorldToScreenPoint(this.transform.position);
-        Ray ray = new Ray(this.muzzle.transform.position, this.muzzle.transform.forward);
+    }
+    
+    bool Shot (Ray ray, RaycastHit hit) {
+        if (Input.GetButtonDown ("Shock") && !this.isShooting) {
+            AudioClip shot = (AudioClip)Resources.Load("Sounds/gun");
+            this.transform.Find("gun").audio.PlayOneShot(shot);
+            this.animation.Play("right");
+            this.isShooting = true;
+            if (shockEffect == null) {
+                GameObject prefab = (GameObject)Resources.Load ("Prefabs/shockEffectPrefab", typeof(GameObject));
+                shockEffect = (GameObject)Instantiate (prefab, this.muzzle.transform.position, Quaternion.identity);
+                LevelManager manager = GameObject.FindWithTag ("LevelManager").GetComponent<LevelManager> ();
+                shockEffect.transform.parent = manager.GetLevelObject ().transform;
+            }
+            if (hit.collider.gameObject.CompareTag ("Enemy")) {
+                hit.collider.gameObject.SendMessage ("Shock");
+            } else if (hit.collider.gameObject.CompareTag ("Bomb")) {
+                hit.collider.gameObject.SendMessage ("Explode");
+            } else if (hit.collider.gameObject.CompareTag ("Switch")) {
+                hit.collider.gameObject.SendMessage ("Toggle");
+            } else if (hit.collider.gameObject.CompareTag ("Wall")) {
+                hit.collider.gameObject.SendMessage ("Damage");
+            }
+            return true;
+        }
+        return false;
+    }
+    
+    void Control () { 
+        this.AttachBomb ();
+        Vector3 screenPoint = Camera.main.WorldToScreenPoint (this.transform.position);
+        Ray ray = new Ray (this.muzzle.transform.position, this.muzzle.transform.forward);
         RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, 100)) {
-            LineRenderer renderer = this.GetComponent<LineRenderer>(); 
-            if (Input.GetButton("Shock")) {
-                renderer.enabled = false;
-                if (shockEffect == null) {
-                    GameObject prefab = (GameObject)Resources.Load("Prefabs/shockEffectPrefab", typeof(GameObject));
-                    shockEffect = (GameObject)Instantiate(prefab, this.muzzle.transform.position, Quaternion.identity);
-                    LevelManager manager = GameObject.FindWithTag("LevelManager").GetComponent<LevelManager>();
-                    shockEffect.transform.parent = manager.GetLevelObject().transform;
-                }
-                if (hit.collider.gameObject.CompareTag("Enemy")) {
-                    hit.collider.gameObject.SendMessage("Shock");
-                } else if (hit.collider.gameObject.CompareTag("Bomb")) {
-                    hit.collider.gameObject.SendMessage("Explode");
-                } else if (hit.collider.gameObject.CompareTag("Switch")) {
-                    hit.collider.gameObject.SendMessage("Toggle");
-                } else if (hit.collider.gameObject.CompareTag("Wall")) {
-                    hit.collider.gameObject.SendMessage("Damage");
-                }
-            } else {
-                renderer.enabled = true;
-                renderer.SetVertexCount(2);
-                renderer.SetPosition(0, this.muzzle.transform.position);
-                renderer.SetPosition(1, hit.point);
-                if (hit.collider.gameObject.CompareTag("Enemy")) {
+        if (Physics.Raycast (ray, out hit, 100)) {
+            this.Shot (ray, hit); 
+        } 
+        if (this.isShooting) {
+            this.shootingTimer += Time.deltaTime;
+            renderer.enabled = false;
+            if (this.shockEffect != null) {
+                shockEffect.transform.position = this.muzzle.transform.position;
+                shockEffect.transform.LookAt (hit.point);
+            }
+            if (this.shootingTimer > 0.5f) {
+                Destroy (this.shockEffect);
+                this.shockEffect = null;
+                this.isShooting = false;
+                this.shootingTimer = 0.0f;
+            }
+        } else {
+            renderer.enabled = true;
+            renderer.SetVertexCount (2);
+            renderer.SetPosition (0, this.muzzle.transform.position);
+            renderer.SetPosition (1, hit.point);
+            if (hit.collider != null) {
+                if (hit.collider.gameObject.CompareTag ("Enemy")) {
                     renderer.material.color = Color.red;   
                 } else {
                     renderer.material.color = Color.yellow;   
                 }
-                if (shockEffect != null) {
-                    Destroy(shockEffect);
-                    shockEffect = null;
-                }
+            }
+        }
+        float v = Input.GetAxisRaw("Vertical");
+        if (v < 0) {
+            if (!this.animation.IsPlaying("back") && !this.animation.isPlaying) {
+                this.animation.Play("back");
             }
         } else {
-            renderer.enabled = false;
-        } 
-        if (this.shockEffect != null) {
-            shockEffect.transform.position = this.muzzle.transform.position;
-            shockEffect.transform.LookAt(hit.point);
+            if (!this.animation.IsPlaying("forward") && !this.animation.isPlaying) {
+                this.animation.Play("forward");
+            }
         }
-        CharacterMotor motor = this.gameObject.GetComponent<CharacterMotor>();
-        this.audio.volume = Vector3.Distance(motor.GetDirection(), Vector3.zero) / 1.0f;
+        
+        CharacterMotor motor = this.GetComponent<CharacterMotor>();
+        /*if (motor.GetDirection() != Vector3.zero) {
+            this.transform.LookAt(this.transform.position + motor.GetDirection());
+        }*/
+        this.audio.volume = Vector3.Distance (motor.GetDirection (), Vector3.zero) / 1.0f;
     }
     
     void Update () {
         //this.controller.SetInputType(Input.GetJoystickNames().Length == 0 ? InputType.Mouse : InputType.JoyStick);
-        this.controller.SetInputType(InputType.JoyStick);
+        this.controller.SetInputType (InputType.JoyStick);
         if (this.canControl) {
-            this.Control();
+            this.Control ();
         } 
         if (this.state == PlayerState.DeathAnimation) {
-            this.head.transform.Rotate(Vector3.right * ((1.0f - deathTimer) * 120));
+            this.head.transform.Rotate (Vector3.right * ((1.0f - deathTimer) * 120));
             this.deathTimer += Time.deltaTime;
             if (deathTimer > 2.9) {
                 this.state = PlayerState.Death;
-                this.DestroyBody();
-                GameObject controller = GameObject.FindWithTag("GameController");
-                controller.SendMessage("Miss", this.playerNumber);
+                this.DestroyBody ();
+                GameObject controller = GameObject.FindWithTag ("GameController");
+                controller.SendMessage ("Miss", this.playerNumber);
             }
         }
         if (this.transform.position.y < -10) {
-            this.Death();
+            this.Death ();
         }
     }
     
     bool IsGrounded () {
-        Ray floorRay = new Ray(this.transform.position + Vector3.down * this.transform.localScale.y / 2.0f, Vector3.down);
+        Ray floorRay = new Ray (this.transform.position + Vector3.down * this.transform.localScale.y / 2.0f, Vector3.down);
         RaycastHit hit;
-        if (Physics.Raycast(floorRay, out hit, 0.5f)) {
-                return true;
+        if (Physics.Raycast (floorRay, out hit, 0.5f)) {
+            return true;
         }
         return false;
     }
     
     void Death () {
-        if (this.state != PlayerState.Normal) return;
-        Destroy(shockEffect);
+        if (this.state != PlayerState.Normal)
+            return;
+        Destroy (shockEffect);
         shockEffect = null;
-        LineRenderer renderer = this.GetComponent<LineRenderer>(); 
+        LineRenderer renderer = this.GetComponent<LineRenderer> (); 
         renderer.enabled = false;  
-        this.SetControl(false);
+        this.SetControl (false);
         this.audio.volume = 0;
         this.state = PlayerState.DeathAnimation;
-        GameObject.FindWithTag("GameController").SendMessage("PlayMusic", "Sounds/gameover0");
+        GameObject.FindWithTag ("GameController").SendMessage ("PlayMusic", "Sounds/gameover0");
     }
     
     void DestroyBody () {
         /*Destroy(this.GetComponent<PlatformInputController>());
         Destroy(this.GetComponent<CharacterMotor>());
         Destroy(this.GetComponent<CharacterController>());*/
-        Destroy(this.transform.Find ("Armature").gameObject);
+        Destroy (this.transform.Find ("Armature").gameObject);
         foreach (Transform part in this.transform) {
-            part.gameObject.AddComponent("Rigidbody");
-            if (part.GetComponent<BoxCollider>() != null) {
-                part.GetComponent<BoxCollider>().enabled = true;
+            part.gameObject.AddComponent ("Rigidbody");
+            if (part.GetComponent<BoxCollider> () != null) {
+                part.GetComponent<BoxCollider> ().enabled = true;
             }
             part.rigidbody.velocity = Random.onUnitSphere;
         }
@@ -157,8 +189,7 @@ public class Player : MonoBehaviour {
     
     void SetControl (bool c) {
         this.canControl = c;
-        this.GetComponent<CharacterMotor>().canControl = c;
-        this.GetComponent<JoyStickController>().enableLookRotation = c;
+        this.GetComponent<CharacterMotor>().enabled = c;
         if (!c) this.audio.volume = 0;
     }
 }

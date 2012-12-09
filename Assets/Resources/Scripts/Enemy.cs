@@ -114,7 +114,7 @@ public class Enemy : MonoBehaviour {
         } else if (this.actionState == EnemyActionState.Follow) {
             this.aiPath.speed = this.fastSpeed;
             GameObject player = this.GetNearestPlayer ();
-            if (player != null && Vector3.Distance (this.transform.position, player.transform.position) > 50) {
+            if (player != null && Vector3.Distance (this.transform.position, player.transform.position) > 100) {
                 this.actionState = EnemyActionState.Search;                
                 this.ChangeTarget ();
             }

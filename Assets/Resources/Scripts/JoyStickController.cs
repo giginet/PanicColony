@@ -6,6 +6,7 @@ public enum InputType {
     JoyStick
 }; 
     
+[RequireComponent(typeof(CharacterController))]
 public class JoyStickController : MonoBehaviour {
     private InputType type = InputType.Mouse; 
     
@@ -22,7 +23,12 @@ public class JoyStickController : MonoBehaviour {
         public CameraRotationControl verticalControl;
     }
     
+    [System.Serializable]
     public class CharacterControl {
+        public bool enabled = true;
+        public AnimationClip idle = null;
+        public AnimationClip walk = null;
+        public float speed = 5.0f;
     } 
     
     [System.Serializable]
@@ -44,11 +50,18 @@ public class JoyStickController : MonoBehaviour {
     public CameraControl cameraControl;
     public CharacterControl characterControl;
     private Vector3 wantedCameraAngle = Vector3.zero;
+    private Vector3 velocity = Vector3.zero;
     
     // Use this for initialization
     void Start () {
-        this.cameraControl.cameraTransform.position = this.transform.position + Vector3.up * this.cameraControl.height + this.transform.forward * -this.cameraControl.distance;
+        this.cameraControl.cameraTransform.position = this.transform.position + Vector3.up * this.cameraControl.height + Vector3.forward * -this.cameraControl.distance;
         this.cameraControl.cameraTransform.collider.enabled = this.cameraControl.rigidbodyEnabled;
+    }
+    
+    void Update () {
+        if (this.characterControl.enabled) {
+            this.ControlCharacter();
+        }
     }
     
     // Update is called once per frame
@@ -61,6 +74,18 @@ public class JoyStickController : MonoBehaviour {
             lookTarget.y = this.transform.position.y;
             this.transform.LookAt(lookTarget);
         }
+    }
+    
+    void ControlCharacter () {
+        Vector3 forward = Camera.main.transform.TransformDirection(Vector3.forward);
+        forward.y = 0;
+        forward = forward.normalized;
+        Vector3 right = new Vector3(forward.z, 0, -forward.x);
+        float v = Input.GetAxisRaw("Vertical");
+        float h = Input.GetAxisRaw("Horizontal");
+        this.velocity = Vector3.Normalize(forward * v + right * h) * this.characterControl.speed * Time.deltaTime;
+        CharacterController controller = this.GetComponent<CharacterController>();
+        controller.Move (velocity); 
     }
     
     void ControlCamera () {
@@ -96,6 +121,7 @@ public class JoyStickController : MonoBehaviour {
             this.wantedCameraAngle.x = Mathf.Clamp(this.wantedCameraAngle.x, min, max);
         }
         
+        
         Vector3 cameraPosition = Vector3.Lerp(currentCameraPosition, wantedCameraPosition, this.cameraControl.damping * Time.deltaTime);
         Quaternion cameraRotation = Quaternion.Lerp(currentCameraRotation, wantedCameraRotation, this.cameraControl.rotationDamping * Time.deltaTime);
         
@@ -103,8 +129,13 @@ public class JoyStickController : MonoBehaviour {
             this.cameraControl.cameraTransform.gameObject.rigidbody.MovePosition(cameraPosition);
             this.cameraControl.cameraTransform.gameObject.rigidbody.MoveRotation(cameraRotation);
         } else {
-            this.cameraControl.cameraTransform.position = cameraPosition; 
-            this.cameraControl.cameraTransform.rotation = cameraRotation;
+            if (this.cameraControl.rigidbodyEnabled) {
+                this.cameraControl.cameraTransform.rigidbody.MovePosition(cameraPosition); 
+                this.cameraControl.cameraTransform.rigidbody.MoveRotation(cameraRotation); 
+            } else {
+                this.cameraControl.cameraTransform.position = cameraPosition; 
+                this.cameraControl.cameraTransform.rotation = cameraRotation;
+            }
         } 
     }
     
@@ -118,5 +149,9 @@ public class JoyStickController : MonoBehaviour {
     
     public void SetInputType (InputType t) {
         this.type = t;
+    }
+    
+    public Vector3 GetVelocity () {
+        return this.velocity;
     }
 }
