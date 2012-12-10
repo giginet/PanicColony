@@ -33,7 +33,7 @@ public class JoyStickController : MonoBehaviour {
     
     [System.Serializable]
     public class CameraRotationControl {
-        public bool controllEnabled = true;
+        public bool enabled = true;
         public bool inverse = false;
         public float speed = 3.0f;
         public string axisName = "";
@@ -60,7 +60,7 @@ public class JoyStickController : MonoBehaviour {
     
     void Update () {
         if (this.characterControl.enabled) {
-            this.ControlCharacter();
+            //this.ControlCharacter();
         }
     }
     
@@ -106,7 +106,7 @@ public class JoyStickController : MonoBehaviour {
                 yAxis += ((mousePoint.y - Screen.width / 2.0f) / (Screen.height / 2.0f)) * mouseRotationVerticalSpeed;
             }
         }
-        if (this.cameraControl.horizontalControl.controllEnabled && Mathf.Abs (xAxis) > 0.1) {
+        if (this.cameraControl.horizontalControl.enabled && Mathf.Abs (xAxis) > 0.1) {
             this.wantedCameraAngle.y += xAxis * this.cameraControl.horizontalControl.speed * (this.cameraControl.horizontalControl.inverse ? 1 : -1);
             float min = this.cameraControl.horizontalControl.minAngle;
             float max = this.cameraControl.horizontalControl.maxAngle;
@@ -114,7 +114,7 @@ public class JoyStickController : MonoBehaviour {
                 this.wantedCameraAngle.y = Mathf.Clamp(this.wantedCameraAngle.y, min, max);
             }
         }
-        if (this.cameraControl.verticalControl.controllEnabled && Mathf.Abs (yAxis) > 0.1) {
+        if (this.cameraControl.verticalControl.enabled && Mathf.Abs (yAxis) > 0.1) {
             this.wantedCameraAngle.x += yAxis * this.cameraControl.verticalControl.speed * (this.cameraControl.verticalControl.inverse ? 1 : -1);
             float min = this.cameraControl.verticalControl.minAngle;
             float max = this.cameraControl.verticalControl.maxAngle;

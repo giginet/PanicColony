@@ -14,7 +14,8 @@ public class BombEnemy : Enemy {
         this.robot.collider.enabled = false;
     }
     
-    override public void Attack () {
+    override public bool Attack () {
+        return true;
     }
 
     // Use this for initialization

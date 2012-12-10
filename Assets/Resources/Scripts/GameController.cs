@@ -7,6 +7,8 @@ public class GameController : MonoBehaviour {
     public int initialLevel = 1;
     public int initialLife = 3;
     public int vegetableBorder = 3;
+    public int roomBonus = 3000;
+    public int maxLife = 15;
     
     private GameState state = GameState.Start;
     private GameObject levelManager = null;
@@ -52,6 +54,7 @@ public class GameController : MonoBehaviour {
         this.lives[1] = this.initialLife;
         this.startAnimation = new Animation2D(new Rect((Screen.width - 800) / 2, (Screen.height - 600) / 2, 800, 600), "UI/Start/start", 57);
         this.bombEnemies = new List<Enemy>();
+        this.audio.volume = 0.2f;
         this.Replay();
     }
     
@@ -60,10 +63,11 @@ public class GameController : MonoBehaviour {
             this.timer += Time.deltaTime;
             if (timer > 1.0f && !this.startAnimation.IsPlaying()) {
                 this.startAnimation.Play();
-            } else if (timer > 3.0f) {
+            } else if (timer > 4.5f) {
                 this.timer = 0;
                 this.state = GameState.Main;
                 this.SetCharacterCanMove(true);
+                StartCoroutine(this.PlayBGM());
             }
             this.startAnimation.Update();
         } else if (this.state == GameState.Main) {
@@ -71,13 +75,18 @@ public class GameController : MonoBehaviour {
                 this.Clear();
             }
         } else if (this.state == GameState.Miss) {
-            if (Input.GetButtonDown("Start")) {
+            if (Input.GetButtonDown("Start") || Input.GetKeyDown(KeyCode.Space)) {
                 this.PlayMusic("Sounds/gameover1");
                 if (GameObject.FindGameObjectsWithTag("Enemy").Length == 0) {
                     this.NextStage();
                 } else {
                     this.Replay();
                 }
+            }
+        } else if (this.state == GameState.GameOver) {
+            if (Input.GetButtonDown("Start") || Input.GetKeyDown(KeyCode.Space)) {
+                this.PlayMusic("Sounds/gameover1");
+                Application.LoadLevel("TitleScene");
             }
         } else if (this.state == GameState.Clear) {
             this.timer += Time.deltaTime;
@@ -94,16 +103,26 @@ public class GameController : MonoBehaviour {
     void UpdateScore(int player) {
         if (!this.audioPlayer.isPlaying) {
             if (this.currentScores[player] < this.targetScores[player]) {
-                AudioClip clip = (AudioClip)Resources.Load ("Sounds/score");
-                if (!this.audioPlayer.isPlaying) {
+                int before = this.currentScores[player];
+                /*if (!this.audioPlayer.isPlaying) {
+                    AudioClip clip = (AudioClip)Resources.Load ("Sounds/score");
                     this.audioPlayer.PlayOneShot(clip);
-                }
+                }*/
                 int sub = this.targetScores[player] - this.currentScores[player];
                 int order = (int)Mathf.Log10(sub);
                 if (order > 0) {
                     this.currentScores[player] += (int)Mathf.Pow(10, order - 1);
                 } else {
                     this.currentScores[player] += 1;
+                }
+                int after = this.currentScores[player];
+                // extend
+                if (this.lives[player] <= this.maxLife) {
+                    if ((before < 20000 && after >= 20000) || (Mathf.Floor((before - 20000) / 40000) < Mathf.Floor((after - 20000) / 40000))) {
+                        AudioClip clip = (AudioClip)Resources.Load ("Sounds/extend");
+                        this.audioPlayer.PlayOneShot(clip);
+                        this.lives[player] += 1;
+                    }
                 }
             } else {
                 this.currentScores[player] = this.targetScores[player];
@@ -160,6 +179,8 @@ public class GameController : MonoBehaviour {
         this.startAnimation.Rewind();
         this.timer = 0;
         this.SetCharacterCanMove(false);
+        this.audio.clip = (AudioClip)Resources.Load("Sounds/start");
+        this.audio.Play();
     }
     
     bool CheckClear () {
@@ -188,8 +209,24 @@ public class GameController : MonoBehaviour {
     
     void Clear () {
         this.state = GameState.Clear;
+        this.StopBGM();
         AudioClip clip = (AudioClip)Resources.Load("Sounds/clear");
-        this.audioPlayer.PlayOneShot(clip);
+        this.audioPlayer.audio.PlayOneShot(clip);
+        int sum = 0;
+        int remain = 0;
+        foreach (Room room in this.levelManager.GetComponent<LevelManager>().GetLevel().GetRooms()) { 
+            if (!room.IsProtect()) {
+                int area = room.GetFloors().Count;
+                sum += area;
+                if (room.IsEnable()) {
+                    remain += area;
+                }
+            }
+        }
+        float percent = (float)remain / (float)sum;
+        Debug.Log ("percent = " + percent.ToString());
+        int score = (int)(this.roomBonus * percent);
+        this.AddScore(0, score);
     }
     
     void GameOver () {
@@ -229,6 +266,17 @@ public class GameController : MonoBehaviour {
             GameObject vegetable = (GameObject)Instantiate(prefab, manager.MatrixToPosition(pos), Quaternion.identity);
             vegetable.transform.parent = manager.GetLevelObject().transform;
         }
+        // Add voice
+        if (count == 3) {
+            AudioClip joy = (AudioClip)Resources.Load("Sounds/joy0");
+            this.audioPlayer.audio.PlayOneShot(joy);
+        } else if (count == 4) {
+            AudioClip joy = (AudioClip)Resources.Load("Sounds/joy1");
+            this.audioPlayer.audio.PlayOneShot(joy);
+        } else if (count >= 5) {
+            AudioClip joy = (AudioClip)Resources.Load("Sounds/joy2");
+            this.audioPlayer.audio.PlayOneShot(joy);
+        }
     }
     
     public void SetCharacterCanMove (bool b) {
@@ -248,5 +296,21 @@ public class GameController : MonoBehaviour {
     
     public int GetCurrentLevel () {
         return this.currentLevel;
+    }
+    
+    IEnumerator PlayBGM () {
+        this.audio.clip = (AudioClip)Resources.Load("Sounds/main_intro");
+        this.audio.Play();
+        yield return new WaitForSeconds(this.audio.clip.length);
+        this.audio.clip = (AudioClip)Resources.Load("Sounds/main_loop");
+        this.audio.loop = true;
+        this.audio.Play();
+    }
+    
+    void StopBGM () {
+        StopCoroutine("PlayBGM");
+        StopAllCoroutines();
+        this.audio.Stop();
+        this.audio.clip = null;
     }
 }

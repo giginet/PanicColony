@@ -56,7 +56,6 @@ public class Player : MonoBehaviour {
         if (Input.GetButtonDown ("Shock") && !this.isShooting) {
             AudioClip shot = (AudioClip)Resources.Load("Sounds/gun");
             this.transform.Find("gun").audio.PlayOneShot(shot);
-            this.animation.Play("right");
             this.isShooting = true;
             if (shockEffect == null) {
                 GameObject prefab = (GameObject)Resources.Load ("Prefabs/shockEffectPrefab", typeof(GameObject));
@@ -81,7 +80,7 @@ public class Player : MonoBehaviour {
     void Control () { 
         this.AttachBomb ();
         Vector3 screenPoint = Camera.main.WorldToScreenPoint (this.transform.position);
-        Ray ray = new Ray (this.muzzle.transform.position, this.muzzle.transform.forward);
+        Ray ray = new Ray (this.muzzle.transform.position, this.transform.forward);
         RaycastHit hit;
         if (Physics.Raycast (ray, out hit, 100)) {
             this.Shot (ray, hit); 
@@ -103,7 +102,11 @@ public class Player : MonoBehaviour {
             renderer.enabled = true;
             renderer.SetVertexCount (2);
             renderer.SetPosition (0, this.muzzle.transform.position);
-            renderer.SetPosition (1, hit.point);
+            if (hit.collider != null) {       
+                renderer.SetPosition (1, hit.point);
+            } else {
+                renderer.SetPosition (1, this.muzzle.transform.position + this.transform.forward * 100);
+            }
             if (hit.collider != null) {
                 if (hit.collider.gameObject.CompareTag ("Enemy")) {
                     renderer.material.color = Color.red;   
@@ -113,13 +116,29 @@ public class Player : MonoBehaviour {
             }
         }
         float v = Input.GetAxisRaw("Vertical");
-        if (v < 0) {
-            if (!this.animation.IsPlaying("back") && !this.animation.isPlaying) {
-                this.animation.Play("back");
-            }
-        } else {
-            if (!this.animation.IsPlaying("forward") && !this.animation.isPlaying) {
-                this.animation.Play("forward");
+        float h = Input.GetAxisRaw("Horizontal");
+        bool isAnimation = this.animation.IsPlaying("attach");
+        if (!isAnimation) {
+            if (h < -0.2) {
+                if (!this.animation.IsPlaying("left")) {
+                    this.animation.Play("left");
+                }
+            } else if (h > 0.2) {
+                if (!this.animation.IsPlaying("right")) {
+                    this.animation.Play("right");
+                }
+            } else if (v < -0.2) {
+                if (!this.animation.IsPlaying("back")) {
+                    this.animation.Play("back");
+                }
+            } else if (v > 0.2) {
+                if (!this.animation.IsPlaying("forward")) {
+                    this.animation.Play("forward");
+                }
+            } else {
+                if (!this.animation.IsPlaying("idle")) {
+                    this.animation.Play("idle");
+                }
             }
         }
         
@@ -133,10 +152,11 @@ public class Player : MonoBehaviour {
     void Update () {
         //this.controller.SetInputType(Input.GetJoystickNames().Length == 0 ? InputType.Mouse : InputType.JoyStick);
         this.controller.SetInputType (InputType.JoyStick);
-        if (this.canControl) {
+        if (this.state == PlayerState.Normal && this.canControl) {
             this.Control ();
         } 
         if (this.state == PlayerState.DeathAnimation) {
+            this.animation.Stop();
             this.head.transform.Rotate (Vector3.right * ((1.0f - deathTimer) * 120));
             this.deathTimer += Time.deltaTime;
             if (deathTimer > 2.9) {
@@ -170,7 +190,9 @@ public class Player : MonoBehaviour {
         this.SetControl (false);
         this.audio.volume = 0;
         this.state = PlayerState.DeathAnimation;
-        GameObject.FindWithTag ("GameController").SendMessage ("PlayMusic", "Sounds/gameover0");
+        GameObject controller = GameObject.FindWithTag ("GameController");
+        controller.SendMessage ("PlayMusic", "Sounds/gameover0");
+        controller.SendMessage ("StopBGM");
     }
     
     void DestroyBody () {
@@ -190,7 +212,13 @@ public class Player : MonoBehaviour {
     void SetControl (bool c) {
         this.canControl = c;
         this.GetComponent<CharacterMotor>().enabled = c;
+        this.GetComponent<JoyStickController>().cameraControl.horizontalControl.enabled = c;
+        this.GetComponent<JoyStickController>().cameraControl.verticalControl.enabled = c;
         if (!c) this.audio.volume = 0;
+    }
+    
+    public PlayerState GetPlayerState () {
+        return this.state;
     }
 }
 

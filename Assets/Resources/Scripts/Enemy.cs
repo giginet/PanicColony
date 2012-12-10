@@ -5,9 +5,10 @@ using Pathfinding;
 
 public class Enemy : MonoBehaviour {
 
-    enum EnemyState {
+    public enum EnemyState {
         Normal,
         Damage,
+        Attack,
         Shocking,
         Death
     }
@@ -30,18 +31,26 @@ public class Enemy : MonoBehaviour {
     public float shockDuration = 3.0f;
     public float rotationSpeed = 2.0f;
     public EnemyAI ai = EnemyAI.Normal;
+    public float attackRange = 1.5f;
     private float shockTime = 0;
     private EnemyActionState actionState = EnemyActionState.Search;
     private EnemyState state = 0;
     private Vector2 initialPosition;    
+    private GameObject worm = null;
+    private int stopCount = 0;
     protected AIPath aiPath;
     protected LevelManager levelManager = null;
+    protected Unit lastUnit = null;
 
     void Awake () {
         this.aiPath = this.gameObject.GetComponent<AIPath> ();
         this.levelManager = GameObject.FindWithTag ("LevelManager").GetComponent<LevelManager> ();
         this.initialPosition = this.levelManager.PositionToMatrix (this.transform.position);
         this.aiPath.enabled = false;
+        Transform wormTransform = this.transform.Find("worm");
+        if (wormTransform != null) {
+                this.worm = wormTransform.gameObject;
+        }
     }
     
     virtual protected void Start () {
@@ -59,7 +68,11 @@ public class Enemy : MonoBehaviour {
         }
         if (this.state == EnemyState.Normal) {
             this.aiPath.enabled = true;
-            this.Attack();
+            if (!this.Attack()) {
+                if (!this.worm.animation.IsPlaying("walk")) {
+                    this.worm.animation.CrossFade("walk");
+                }
+            }
             
         } else if (this.state == EnemyState.Shocking) {
             this.transform.Rotate (Vector3.up * rotationSpeed);
@@ -70,6 +83,7 @@ public class Enemy : MonoBehaviour {
                 this.state = EnemyState.Normal;
             }
         }
+        this.ChangeState();
         this.Action ();
         if (this.aiPath.target == null || this.IsNearTarget ()) {
             this.ChangeTarget ();
@@ -81,20 +95,48 @@ public class Enemy : MonoBehaviour {
                 this.ChangeTarget ();
             }
         }
-    }
-    
-    virtual public void Attack () {
-        foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
-            if (Vector3.Distance (player.transform.position, this.transform.position) < 1.5f) {
-                player.SendMessage ("Death");
+        Unit currentUnit = this.levelManager.GetUnit(this.transform.position);
+        if (this.lastUnit != null && currentUnit == this.lastUnit ) {
+            this.stopCount += 1;
+            if (this.stopCount > 120) {
+               Debug.Log ("Stop"); 
+               this.stopCount = 0;
+               this.SetRandomRoom();
+               this.aiPath.TrySearchPath();
             }
         }
+        this.lastUnit = currentUnit;
+    }
+    
+    virtual public bool Attack () {
+        foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
+            if (Vector3.Distance (player.transform.position, this.transform.position) < this.attackRange) {
+                if (this.state != EnemyState.Attack && !this.worm.animation.IsPlaying("attack") && player.GetComponent<Player>().GetPlayerState() == Player.PlayerState.Normal) {
+                    this.state = EnemyState.Attack;
+                    StartCoroutine(this.StartAttackAnimation(player));
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    IEnumerator StartAttackAnimation (GameObject player) {
+        this.worm.animation.CrossFade("attack"); 
+        yield return new WaitForSeconds(this.worm.animation["attack"].length / 1.5f);
+        if (Vector3.Distance (player.transform.position, this.transform.position) < this.attackRange) {
+            player.SendMessage ("Death");
+        }
+        this.state = EnemyState.Normal;
     }
     
     virtual public void Shock () {
         this.state = EnemyState.Shocking;
-        this.actionState = EnemyActionState.Follow;
+        this.SetActionState(EnemyActionState.Follow);
         this.shockTime = 0;
+        this.worm.animation.Stop("walk");
+        this.worm.animation.Stop("attack");
+        StopCoroutine("StartAttackAnimation");
     }
     
     public void Death () {
@@ -103,22 +145,7 @@ public class Enemy : MonoBehaviour {
         radar.SendMessage ("DestroyChip", this.gameObject);
     }
     
-    private void Action () {
-        if (this.actionState == EnemyActionState.Search) {
-            this.aiPath.speed = this.normalSpeed;
-            GameObject player = this.GetSameUnitPlayer ();
-            if (player != null) {
-                this.actionState = EnemyActionState.Follow;
-                this.ChangeTarget ();
-            }
-        } else if (this.actionState == EnemyActionState.Follow) {
-            this.aiPath.speed = this.fastSpeed;
-            GameObject player = this.GetNearestPlayer ();
-            if (player != null && Vector3.Distance (this.transform.position, player.transform.position) > 100) {
-                this.actionState = EnemyActionState.Search;                
-                this.ChangeTarget ();
-            }
-        }
+    private void ChangeState () {
         if (this.ai == EnemyAI.Normal) {
              
         } else if (this.ai == EnemyAI.Wait) {
@@ -126,27 +153,58 @@ public class Enemy : MonoBehaviour {
                 this.aiPath.speed = 0;
                 GameObject player = this.GetSameUnitPlayer ();
                 if (player != null) {
-                    this.actionState = EnemyActionState.Search;
-                    this.ChangeTarget ();
+                    this.SetActionState(EnemyActionState.Search);
                 }
             }
         } else if (this.ai == EnemyAI.Escape) {
             GameObject player = this.GetNearestPlayer();
+            Unit playerUnit = this.levelManager.GetUnit(player.transform.position); 
+            if (playerUnit == this.levelManager.GetUnit(this.transform.position)) {
+                this.SetActionState(EnemyActionState.Escape);
+            }
+        }
+    }
+    
+    private void Action () {
+        if (this.actionState == EnemyActionState.Search) {
+            this.aiPath.speed = this.normalSpeed;
+            GameObject player = this.GetSameUnitPlayer ();
+            if (player != null) {
+                this.SetActionState(EnemyActionState.Follow);
+            }
+        } else if (this.actionState == EnemyActionState.Follow) {
+            this.aiPath.speed = this.fastSpeed;
+            GameObject player = this.GetNearestPlayer ();
+            if (player != null) {
+                if (Vector3.Distance (this.transform.position, player.transform.position) > 100) {
+                    this.actionState = EnemyActionState.Search;                
+                    this.SetActionState(EnemyActionState.Search);
+                } else {
+                    this.aiPath.target = player.transform;
+                }
+            }
+        } else if (this.actionState == EnemyActionState.Escape) {
+            GameObject player = this.GetNearestPlayer();
             Unit playerUnit = this.levelManager.GetUnit(player.transform.position);
             if (playerUnit == this.levelManager.GetUnit(this.transform.position)) {
-                this.actionState = EnemyActionState.Escape;
+                this.aiPath.speed = this.fastSpeed;
                 if (playerUnit == this.levelManager.GetUnit(this.aiPath.target.position)) {
-                    this.aiPath.speed = this.fastSpeed;
                     this.SetRandomRoom();
                 }
             }
-        } 
+        }
+    }
+    
+    private void SetActionState (EnemyActionState aState) {
+        this.actionState = aState;
+        this.ChangeTarget();
     }
      
     private void ChangeTarget () {
         GameObject[] players = GameObject.FindGameObjectsWithTag ("Player");
         if (this.actionState == EnemyActionState.Follow) {
             this.aiPath.target = this.GetNearestPlayer ().transform;
+            this.aiPath.TrySearchPath();
         } else if (this.actionState == EnemyActionState.Search) {
             this.SetRandomRoom ();
         }
