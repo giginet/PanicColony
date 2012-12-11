@@ -11,19 +11,22 @@ public class TitleController : MonoBehaviour {
     void Start () {
         logoTexture = (Texture2D)Resources.Load ("UI/logo", typeof(Texture2D));
         pressTexture = (Texture2D)Resources.Load ("UI/start", typeof(Texture2D));
+        AudioClip clip = (AudioClip)Resources.Load("Sounds/title");
+        this.audio.clip = clip;
+        this.audio.loop = true;
+        this.audio.Play();
     }
     
     // Update is called once per frame
     void Update () {
         if (Input.GetButtonDown("Start") && !this.pressed) {
-            AudioClip clip = (AudioClip)Resources.Load("Sounds/get");
+            this.audio.Stop();
+            AudioClip clip = (AudioClip)Resources.Load("Sounds/decide");
             this.audio.PlayOneShot(clip);
             this.pressed = true;
             GameObject explosion = (GameObject)Resources.Load("Prefabs/titleExplosionPrefab");
             Instantiate(explosion, new Vector3(5.31f, -4.588f, 47.17f), Quaternion.identity);
             StartCoroutine(this.NextScene());
-        }
-        if (this.pressed) {
         }
     }
     

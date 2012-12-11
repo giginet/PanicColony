@@ -55,7 +55,12 @@ public class LevelManager : MonoBehaviour {
                 level.SetObject(p, floor);
             }
             if (level.IsRoute(x, y)) {
-                GameObject routePrefab = (GameObject)Resources.Load ("Prefabs/routePrefab", typeof(GameObject));
+                GameObject routePrefab = null;
+                if (this.level.IsFloor(x + 1, y) || this.level.IsFloor(x - 1, y) || this.level.IsFloor(x, y + 1) || this.level.IsFloor(x, y - 1)) {
+                    routePrefab = (GameObject)Resources.Load ("Prefabs/routeEntrancePrefab", typeof(GameObject));
+                } else {
+                    routePrefab = (GameObject)Resources.Load ("Prefabs/routePrefab", typeof(GameObject));
+                }
                 GameObject route = (GameObject)Instantiate (routePrefab, position, Quaternion.identity);
                 route.transform.parent = levelObject.transform;
                 // if route is placed holizontally, rotate object.
@@ -101,7 +106,7 @@ public class LevelManager : MonoBehaviour {
                     // Window Wall
                     wallPrefab = (GameObject)Resources.Load ("Prefabs/windowWallPrefab", typeof(GameObject));
                 }
-                wall = (GameObject)Instantiate (wallPrefab, position, Quaternion.identity);
+                wall = (GameObject)Instantiate(wallPrefab, position, Quaternion.identity);
                 if (isCurve) {
                     if (level.IsFloor(x - 1, y)) {
                         wall.transform.Rotate (new Vector3 (0, 180, 0));
@@ -115,9 +120,9 @@ public class LevelManager : MonoBehaviour {
                         }
                     } else {
                         if (level.IsFloor(x, y - 1) || level.IsFloor(x - 1, y - 1) || level.IsFloor(x + 1, y - 1) ) {
-                            wall.transform.Translate(Vector3.forward * (this.HEIGHT / 2.0f - 0.1f));
+                            wall.transform.Translate(Vector3.forward * (this.HEIGHT / 2.0f));
                         } else if (level.IsFloor(x, y + 1) || level.IsFloor(x - 1, y + 1) || level.IsFloor(x + 1, y + 1) ) {
-                            wall.transform.Translate(Vector3.forward * -(this.HEIGHT / 2.0f - 0.1f));
+                            wall.transform.Translate(Vector3.forward * -(this.HEIGHT / 2.0f));
                             wall.transform.Rotate(Vector3.up * 180);
                         }
                     }
