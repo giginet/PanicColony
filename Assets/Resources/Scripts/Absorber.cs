@@ -27,7 +27,14 @@ public class Absorber : MonoBehaviour {
     void Absorb (GameObject target) {
         CharacterController controller = target.GetComponent<CharacterController>();
         if (this.absorbed.Contains(target)) {
-            controller.Move(Vector3.down * 10); 
+            Vector2 pos = this.levelManager.PositionToMatrix(this.transform.position);
+            int x = (int)pos.x;
+            int y = (int)pos.y;
+            if (this.levelManager.GetLevel().IsFloor(x, y + 1)) {
+                controller.Move(Vector3.forward * 10 + Vector3.down * 2); 
+            } else {
+                controller.Move(Vector3.back * 10 + Vector3.down * 2); 
+            }
         } else {
             Vector3 position = this.transform.position;
             position.y = 0;
@@ -42,7 +49,7 @@ public class Absorber : MonoBehaviour {
                     absorb = Vector3.Normalize(absorb) * (absorbSpeed / Vector3.Distance(this.transform.position, target.transform.position)) * Time.deltaTime;
                     controller.Move(absorb);
                     if (distance < 1.0) {
-                        this.absorbed.Add (target);
+                        this.absorbed.Add(target);
                     }
                 }
             }

@@ -146,7 +146,7 @@ public class LevelManager : MonoBehaviour {
                 }
                 if (!ignore) {
                     GameObject enemyPrefab = (GameObject)Resources.Load ("Prefabs/" + prefabName, typeof(GameObject));
-                    GameObject enemy = (GameObject)Instantiate (enemyPrefab, position + Vector3.up * 6, Quaternion.identity);
+                    GameObject enemy = (GameObject)Instantiate (enemyPrefab, position + Vector3.up * 2, Quaternion.identity);
                     enemy.transform.parent = levelObject.transform;
                 }
             }

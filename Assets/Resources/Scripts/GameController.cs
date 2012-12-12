@@ -261,10 +261,7 @@ public class GameController : MonoBehaviour {
     
     
     public void DestroyEnemy (List<GameObject> enemies) { 
-        int count = enemies.Count;
-        if (count > 0) {
-            this.AddScore(0, count * 1000 * (int)Mathf.Pow(2, count - 1));
-        }
+        int count = enemies.Count; 
         // Add voice
         if (count == 3) {
             AudioClip joy = (AudioClip)Resources.Load("Sounds/joy0");
@@ -277,6 +274,10 @@ public class GameController : MonoBehaviour {
             this.audioPlayer.audio.PlayOneShot(joy);
         }
         foreach (GameObject enemy in enemies) {
+            if (count > 0) {
+                Enemy enemyComponent = enemy.GetComponent<Enemy>();
+                this.AddScore(0, enemyComponent.score * (int)Mathf.Pow(1.5f, count - 1));
+            }
             this.DestroyEnemy(enemy);
         }
     }
