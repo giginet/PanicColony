@@ -21,7 +21,7 @@ public class GameController : MonoBehaviour {
     private List<GameObject> players;
     private float timer = 0;
     private Animation2D startAnimation;
-    private List<Enemy> bombEnemies; 
+    private List<Enemy> destroyedEnemies; 
     
     private Texture2D scoreLabelTexture = null;
     private Texture2D stageLabelTexture = null;
@@ -29,6 +29,7 @@ public class GameController : MonoBehaviour {
     private NumberTexture scoreNumberTexture = null;
     private NumberTexture stageNumberTexture = null;
     private TutorialWindow tutorialWindow = null;
+    private bool isLoading = false;
     
     private bool isVegetableSetted = false;
 
@@ -38,7 +39,8 @@ public class GameController : MonoBehaviour {
         Main,
         Miss,
         GameOver,
-        Clear
+        Clear,
+        Loading
     };
 
     void Awake () {
@@ -56,7 +58,7 @@ public class GameController : MonoBehaviour {
         this.lives[0] = this.initialLife;
         this.lives[1] = this.initialLife;
         this.startAnimation = new Animation2D(new Rect((Screen.width - 800) / 2, (Screen.height - 600) / 2, 800, 600), "UI/Start/start", 57);
-        this.bombEnemies = new List<Enemy>();
+        this.destroyedEnemies = new List<Enemy>();
         this.audio.volume = 0.2f;
         this.Replay();
     }
@@ -68,14 +70,14 @@ public class GameController : MonoBehaviour {
                 this.startAnimation.Play();
             } else if (timer > 4.5f) {
                 this.timer = 0;
+                StartCoroutine(this.PlayMainMusic());
                 if (this.currentLevel < this.tutorialPages.Length) {
                     this.state = GameState.Tutorial;
                     string prefix = "UI/tutorial/tutorial" + this.currentLevel.ToString() + "_";
-                    this.tutorialWindow = new TutorialWindow(prefix, this.tutorialPages[this.currentLevel], new Rect(0, 0, 800, 600));
+                    this.tutorialWindow = new TutorialWindow(prefix, this.tutorialPages[this.currentLevel], new Rect((Screen.width - 960) / 2.0f, (Screen.height - 720) / 2.0f, 960, 720));
                 } else {
                     this.state = GameState.Main;
                     this.SetCharacterCanMove(true);
-                    StartCoroutine(this.PlayBGM());
                 }
             }
             this.startAnimation.Update();
@@ -86,26 +88,15 @@ public class GameController : MonoBehaviour {
             if (this.tutorialWindow.GetPage() >= this.tutorialPages[this.currentLevel]) {
                 this.state = GameState.Main;
                 this.SetCharacterCanMove(true);
-                StartCoroutine(this.PlayBGM());
             }
         } else if (this.state == GameState.Main) {
             if (this.CheckClear()) {
                 this.Clear();
             }
         } else if (this.state == GameState.Miss) {
-            if (Input.GetButtonDown("Start") || Input.GetKeyDown(KeyCode.Space)) {
-                this.PlayMusic("Sounds/gameover1");
-                if (GameObject.FindGameObjectsWithTag("Enemy").Length == 0) {
-                    this.NextStage();
-                } else {
-                    this.Replay();
-                }
-            }
+           StartCoroutine(this.PlayGameOverSound());
         } else if (this.state == GameState.GameOver) {
-            if (Input.GetButtonDown("Start") || Input.GetKeyDown(KeyCode.Space)) {
-                this.PlayMusic("Sounds/gameover1");
-                Application.LoadLevel("TitleScene");
-            }
+           StartCoroutine(this.PlayGameOverSound());
         } else if (this.state == GameState.Clear) {
             this.timer += Time.deltaTime;
             if (this.timer > 6.0) {
@@ -115,6 +106,24 @@ public class GameController : MonoBehaviour {
         }
         for (int i = 0; i < this.players.Count; ++i) {
             this.UpdateScore(i);
+        }
+    }
+    
+    IEnumerator PlayGameOverSound () {
+        if ((Input.GetButtonDown("Start") || Input.GetKeyDown(KeyCode.Space)) && !this.isLoading) {
+            this.isLoading = true;
+            this.PlaySound("Sounds/gameover1");
+            yield return new WaitForSeconds(2.5f);
+            if (this.state == GameState.GameOver) {
+                Application.LoadLevel("TitleScene");
+            } else {
+                if (GameObject.FindGameObjectsWithTag("Enemy").Length == 0) {
+                    this.NextStage();
+                } else {
+                    this.Replay();
+                }
+            }
+            this.isLoading = false;
         }
     }
     
@@ -162,6 +171,8 @@ public class GameController : MonoBehaviour {
             if (this.startAnimation.GetTexture() != null) {
                 GUI.DrawTexture(this.startAnimation.GetRect(), this.startAnimation.GetTexture(), ScaleMode.ScaleToFit, true, this.startAnimation.GetAspectRatio());
             }
+        } else if (this.state == GameState.Tutorial) {
+            this.tutorialWindow.Draw();
         } else if (this.state == GameState.GameOver) {
             GUIStyle labelStyle = new GUIStyle();
             labelStyle.fontSize = 64;
@@ -187,7 +198,7 @@ public class GameController : MonoBehaviour {
         if (oldRadar) {
             Destroy(oldRadar);
         }
-        this.levelManager.GetComponent<LevelManager>().CreateLevel(this.currentLevel, this.bombEnemies);
+        this.levelManager.GetComponent<LevelManager>().CreateLevel(this.currentLevel, this.destroyedEnemies);
         GameObject radar = (GameObject)Resources.Load("Prefabs/radarPrefab");
         Instantiate(radar, Vector3.zero, Quaternion.identity);
         this.state = GameState.Start;
@@ -216,7 +227,7 @@ public class GameController : MonoBehaviour {
     
     void NextStage () {
         this.currentLevel += 1;
-        this.bombEnemies = new List<Enemy>();
+        this.destroyedEnemies = new List<Enemy>();
         this.isVegetableSetted = false;
         TextAsset stage = (TextAsset)Resources.Load ("Levels/Level" + this.currentLevel.ToString());
         if (stage == null) {
@@ -227,7 +238,7 @@ public class GameController : MonoBehaviour {
     
     void Clear () {
         this.state = GameState.Clear;
-        this.StopBGM();
+        this.StopMainMusic();
         AudioClip clip = (AudioClip)Resources.Load("Sounds/clear");
         this.audioPlayer.audio.PlayOneShot(clip);
         int sum = 0;
@@ -283,12 +294,13 @@ public class GameController : MonoBehaviour {
     }
     
     public void DestroyEnemy (GameObject enemy) { 
+        Enemy component = enemy.GetComponent<Enemy>();
+        if (destroyedEnemies.Contains(component)) return;
         GameObject radar = GameObject.FindWithTag ("Radar");
         radar.SendMessage ("DestroyChip", enemy);
-        Enemy component = enemy.GetComponent<Enemy>();
-        this.bombEnemies.Add (component);
+        this.destroyedEnemies.Add(component);
         // Add Vegetable to start Point
-        if (!this.isVegetableSetted && this.bombEnemies.Count >= this.vegetableBorder) {
+        if (!this.isVegetableSetted && this.destroyedEnemies.Count >= this.vegetableBorder) {
             LevelManager manager = this.levelManager.GetComponent<LevelManager>();
             Vector2 pos = manager.GetLevel().GetStartPoint(0);
             GameObject prefab;
@@ -314,9 +326,9 @@ public class GameController : MonoBehaviour {
         }
     }
     
-    public void PlayMusic (string fileName) {
+    public void PlaySound (string fileName) {
         this.audioPlayer.Stop();
-        AudioClip clip = (AudioClip)Resources.Load (fileName);
+        AudioClip clip = (AudioClip)Resources.Load(fileName);
         this.audioPlayer.PlayOneShot(clip);
     }
     
@@ -324,7 +336,7 @@ public class GameController : MonoBehaviour {
         return this.currentLevel;
     }
     
-    IEnumerator PlayBGM () {
+    IEnumerator PlayMainMusic () {
         this.audio.clip = (AudioClip)Resources.Load("Sounds/main_intro");
         this.audio.Play();
         yield return new WaitForSeconds(this.audio.clip.length);
@@ -333,8 +345,8 @@ public class GameController : MonoBehaviour {
         this.audio.Play();
     }
     
-    void StopBGM () {
-        StopCoroutine("PlayBGM");
+    void StopMainMusic () {
+        StopCoroutine("PlayMainMusic");
         StopAllCoroutines();
         this.audio.Stop();
         this.audio.clip = null;

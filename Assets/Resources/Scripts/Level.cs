@@ -215,4 +215,24 @@ public class Level {
         return neighborUnits;
     }
     
+    public int CalcDistance (Unit origin, Unit target) {
+        List < KeyValuePair<Unit, int> > open = new List<KeyValuePair<Unit, int>>();
+        List<Unit> close = new List<Unit>();
+        KeyValuePair<Unit, int> pair = new KeyValuePair<Unit, int>(origin, 0);
+        open.Add(pair);
+        while (open.Count != 0) {
+            Unit current = open[0].Key;
+            int distance = open[0].Value;
+            open.RemoveAt(0);
+            if (current == target) return distance;
+            if (!close.Contains(current)) {
+                close.Add(current);
+                foreach (Unit neighbor in current.GetNeighborUnits(true)) {
+                    KeyValuePair<Unit, int> newPair = new KeyValuePair<Unit, int>(neighbor, distance + 1);
+                    open.Add(newPair);
+                }
+            }
+        }
+        return -1;
+    }
 }

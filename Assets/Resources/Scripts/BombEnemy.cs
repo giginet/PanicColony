@@ -71,4 +71,8 @@ public class BombEnemy : Enemy {
         this.tag = "";
         this.StartCoroutine(this.BombRoom());
     }
+    
+    void OnDestroy () {
+        this.StopCoroutine("BombRoom");
+    }
 }

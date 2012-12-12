@@ -191,8 +191,8 @@ public class Player : MonoBehaviour {
         this.audio.volume = 0;
         this.state = PlayerState.DeathAnimation;
         GameObject controller = GameObject.FindWithTag ("GameController");
-        controller.SendMessage ("PlayMusic", "Sounds/gameover0");
-        controller.SendMessage ("StopBGM");
+        controller.SendMessage ("PlaySound", "Sounds/gameover0");
+        controller.SendMessage ("StopMainMusic");
     }
     
     void DestroyBody () {

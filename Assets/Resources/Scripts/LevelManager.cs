@@ -312,31 +312,45 @@ public class LevelManager : MonoBehaviour {
             }
             GameObject controller = GameObject.FindWithTag("GameController");
             controller.SendMessage("DestroyEnemy", enemies);
-            this.AddExplosion(unit);
         } 
     }
     
     public void BombRoute (Route route) {
         this.DestroyUnit(route);
-        this.DestroyIsolatedUnits();
+        this.DestroyIsolatedUnits(route);
     }
     
     public void BombRoom(Room room) {
         if (room.IsProtect()) return;
         this.DestroyRoom(room); 
-        this.DestroyIsolatedUnits();
+        this.DestroyIsolatedUnits(room);
     }
     
-    public void DestroyIsolatedUnits() {
+    IEnumerator DestroyRoomDelay (Room r, int distance) {
+        yield return new WaitForSeconds(distance * 0.5f);
+        this.DestroyRoom(r);
+        this.AddExplosion(r, (int)Mathf.Min((float)distance, 3.0f));
+    }
+
+    IEnumerator DestroyUnitDelay (Unit unit, int distance) {
+        yield return new WaitForSeconds(distance * 0.5f);
+        this.DestroyUnit(unit);
+        this.AddExplosion(unit, (int)Mathf.Min((float)distance, 3.0f));
+    }
+    
+    public void DestroyIsolatedUnits(Unit origin) {
         List<Room> destroyRooms = new List<Room>();
+        List<int> roomDistances = new List<int>();
         foreach (Room r in this.level.GetRooms() ) {
-            if (!this.level.IsReachFromStart(r, true)) {
+            if (!this.level.IsReachFromStart(r, true)) { 
                 destroyRooms.Add (r);
+                origin.SetEnable(true);
+                int distance = this.level.CalcDistance(origin, r);
+                Debug.Log("Room Distance = " + distance.ToString());
+                roomDistances.Add(distance);
+                origin.SetEnable(false);
             }
-        }
-        foreach (Room r in destroyRooms) { 
-            this.DestroyRoom(r); 
-        }
+        } 
         foreach (Route route in this.level.GetRoutes()) {
             foreach (KeyValuePair<Vector2, Unit> pair in route.GetNeighbors()) {
                 Vector2 pos = pair.Key;
@@ -350,9 +364,18 @@ public class LevelManager : MonoBehaviour {
                 }
             }
             if (!this.level.IsReachFromStart(route, true)) {
-                this.DestroyUnit(route);
+                origin.SetEnable(true);
+                int distance = this.level.CalcDistance(origin, route);
+                origin.SetEnable(false);
+                Debug.Log("Route Distance = " + distance.ToString());
+                this.StartCoroutine(this.DestroyUnitDelay(route, distance));
             }
         }  
+        for (int i = 0; i < destroyRooms.Count; ++i) { 
+            Room r = destroyRooms[i];
+            int distance = roomDistances[i];
+            this.StartCoroutine(this.DestroyRoomDelay(r, distance));
+        }
         this.UpdatePath(); 
     }
     
@@ -374,9 +397,15 @@ public class LevelManager : MonoBehaviour {
         }
     }
     
-    private void AddExplosion (Unit unit) {
+    private void AddExplosion (Unit unit, int explosion) {
+        string sound = "Sounds/explosion" + explosion.ToString();
         GameObject explosionPrefab = (GameObject)Resources.Load("Prefabs/bombExplosionPrefab");
+        AudioClip clip = (AudioClip)Resources.Load(sound);
         Instantiate(explosionPrefab, this.MatrixToPosition(unit.GetCenter()), Quaternion.identity);
+        GameObject audioPlayer = GameObject.Find ("AudioPlayer");
+        if (!audioPlayer.audio.isPlaying) {
+            audioPlayer.audio.PlayOneShot(clip);
+        }
     }
     
     public void AttachBomb (GameObject bomb) {

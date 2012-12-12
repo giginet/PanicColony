@@ -20,6 +20,10 @@ public class Exploder : MonoBehaviour {
             GameObject explosionPrefab = (GameObject)Resources.Load("Prefabs/bombExplosionPrefab");
             Instantiate(explosionPrefab, this.transform.position, Quaternion.identity);
             manager.BombRoom(room);
+        } else {
+            GameObject audioPlayer = GameObject.Find("AudioPlayer");
+            AudioClip miss = (AudioClip)Resources.Load("Sounds/bomb_miss2");
+            audioPlayer.audio.PlayOneShot(miss);
         }
         Destroy(gameObject);
     }
