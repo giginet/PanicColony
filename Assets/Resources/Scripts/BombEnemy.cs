@@ -37,25 +37,38 @@ public class BombEnemy : Enemy {
     
     override public void Shock () {
         this.aiPath.canMove = false;
-        if (!this.slip) {
-            this.robot.animation.Play("slip");
-            this.slip = true;
-            StartCoroutine(this.BombRoom());
-            this.SendMessage("UpdateRadar");
-            this.gameObject.tag = "";
-            GameObject radar = GameObject.FindWithTag("Radar");
-            radar.SendMessage("DestroyChip", this.gameObject);
-            this.gameObject.GetComponent<CharacterController>().radius = 0.01f;
-            this.gameObject.GetComponent<CharacterController>().height = 0.01f;
+        if (!this.slip) { 
+            this.Death();
         } 
     }
     
     private IEnumerator BombRoom () {
-        Room room = this.levelManager.GetRoom(this.transform.position);
-        if (room != null && !room.IsProtect()) {
-            yield return new WaitForSeconds(10.0f);
+        Room room = null;
+        yield return new WaitForSeconds(1.0f);
+        for (int i = 0; i < 15; ++i) {     
+            room = this.levelManager.GetRoom(this.transform.position);
+            if (room != null && !room.IsProtect() && room.IsEnable()) {
+                this.audio.Play();
+                float second = Mathf.Max(0.1f, 1.0f - i * 0.1f);
+                yield return new WaitForSeconds(second);
+            }
+        }
+        room = this.levelManager.GetRoom(this.transform.position);   
+        if (room != null && !room.IsProtect() && room.IsEnable()) {
             this.SendMessage("Explode");
         }
-        yield return null;
+    }
+    
+    override public void Death () {
+        GameObject radar = GameObject.FindWithTag ("Radar");
+        radar.SendMessage ("DestroyChip", this.gameObject);
+        GameObject controller = GameObject.FindWithTag("GameController");
+        controller.SendMessage("DestroyEnemy", this.gameObject);
+        this.slip = true;
+        this.robot.animation.Play("slip");
+        this.gameObject.GetComponent<CharacterController>().radius = 0.01f;
+        this.gameObject.GetComponent<CharacterController>().height = 0.01f;
+        this.tag = "";
+        this.StartCoroutine(this.BombRoom());
     }
 }

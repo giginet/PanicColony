@@ -9,6 +9,7 @@ public class GameController : MonoBehaviour {
     public int vegetableBorder = 3;
     public int roomBonus = 3000;
     public int maxLife = 15;
+    public int[] tutorialPages = {};
     
     private GameState state = GameState.Start;
     private GameObject levelManager = null;
@@ -27,11 +28,13 @@ public class GameController : MonoBehaviour {
     private Texture2D lifeTexture = null;
     private NumberTexture scoreNumberTexture = null;
     private NumberTexture stageNumberTexture = null;
+    private TutorialWindow tutorialWindow = null;
     
     private bool isVegetableSetted = false;
 
     public enum GameState {
         Start,
+        Tutorial,
         Main,
         Miss,
         GameOver,
@@ -65,11 +68,26 @@ public class GameController : MonoBehaviour {
                 this.startAnimation.Play();
             } else if (timer > 4.5f) {
                 this.timer = 0;
+                if (this.currentLevel < this.tutorialPages.Length) {
+                    this.state = GameState.Tutorial;
+                    string prefix = "UI/tutorial/tutorial" + this.currentLevel.ToString() + "_";
+                    this.tutorialWindow = new TutorialWindow(prefix, this.tutorialPages[this.currentLevel], new Rect(0, 0, 800, 600));
+                } else {
+                    this.state = GameState.Main;
+                    this.SetCharacterCanMove(true);
+                    StartCoroutine(this.PlayBGM());
+                }
+            }
+            this.startAnimation.Update();
+        } else if (this.state == GameState.Tutorial) {
+            if (Input.anyKeyDown || Input.GetButtonDown("Start")) {
+                this.tutorialWindow.Next();
+            }
+            if (this.tutorialWindow.GetPage() >= this.tutorialPages[this.currentLevel]) {
                 this.state = GameState.Main;
                 this.SetCharacterCanMove(true);
                 StartCoroutine(this.PlayBGM());
             }
-            this.startAnimation.Update();
         } else if (this.state == GameState.Main) {
             if (this.CheckClear()) {
                 this.Clear();
@@ -241,15 +259,33 @@ public class GameController : MonoBehaviour {
         this.targetScores[player] += score;
     }
     
-    public void BombEnemy (List<GameObject> enemies) {
+    
+    public void DestroyEnemy (List<GameObject> enemies) { 
         int count = enemies.Count;
         if (count > 0) {
             this.AddScore(0, count * 1000 * (int)Mathf.Pow(2, count - 1));
         }
-        foreach (GameObject enemy in enemies) {
-            Enemy component = enemy.GetComponent<Enemy>();
-            this.bombEnemies.Add (component);
+        // Add voice
+        if (count == 3) {
+            AudioClip joy = (AudioClip)Resources.Load("Sounds/joy0");
+            this.audioPlayer.audio.PlayOneShot(joy);
+        } else if (count == 4) {
+            AudioClip joy = (AudioClip)Resources.Load("Sounds/joy1");
+            this.audioPlayer.audio.PlayOneShot(joy);
+        } else if (count >= 5) {
+            AudioClip joy = (AudioClip)Resources.Load("Sounds/joy2");
+            this.audioPlayer.audio.PlayOneShot(joy);
         }
+        foreach (GameObject enemy in enemies) {
+            this.DestroyEnemy(enemy);
+        }
+    }
+    
+    public void DestroyEnemy (GameObject enemy) { 
+        GameObject radar = GameObject.FindWithTag ("Radar");
+        radar.SendMessage ("DestroyChip", enemy);
+        Enemy component = enemy.GetComponent<Enemy>();
+        this.bombEnemies.Add (component);
         // Add Vegetable to start Point
         if (!this.isVegetableSetted && this.bombEnemies.Count >= this.vegetableBorder) {
             LevelManager manager = this.levelManager.GetComponent<LevelManager>();
@@ -265,17 +301,6 @@ public class GameController : MonoBehaviour {
             this.isVegetableSetted = true;
             GameObject vegetable = (GameObject)Instantiate(prefab, manager.MatrixToPosition(pos), Quaternion.identity);
             vegetable.transform.parent = manager.GetLevelObject().transform;
-        }
-        // Add voice
-        if (count == 3) {
-            AudioClip joy = (AudioClip)Resources.Load("Sounds/joy0");
-            this.audioPlayer.audio.PlayOneShot(joy);
-        } else if (count == 4) {
-            AudioClip joy = (AudioClip)Resources.Load("Sounds/joy1");
-            this.audioPlayer.audio.PlayOneShot(joy);
-        } else if (count >= 5) {
-            AudioClip joy = (AudioClip)Resources.Load("Sounds/joy2");
-            this.audioPlayer.audio.PlayOneShot(joy);
         }
     }
     

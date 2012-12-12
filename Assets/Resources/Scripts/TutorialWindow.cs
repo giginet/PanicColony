@@ -28,6 +28,10 @@ public class TutorialWindow {
         }
     }
     
+    public int GetPage () {
+        return this.page;
+    }
+    
     private Texture2D LoadTexture (int page) {
         string filename = this.prefix + page.ToString();
         return (Texture2D)Resources.Load(filename, typeof(Texture2D));

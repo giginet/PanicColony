@@ -30,6 +30,7 @@ public class Enemy : MonoBehaviour {
     public float fastSpeed = 15.0f;
     public float shockDuration = 3.0f;
     public float rotationSpeed = 2.0f;
+    public int score = 1000;
     public EnemyAI ai = EnemyAI.Normal;
     public float attackRange = 1.5f;
     private float shockTime = 0;
@@ -64,7 +65,7 @@ public class Enemy : MonoBehaviour {
     
     protected virtual void Update () {
         if (this.transform.position.y < -10) {
-            Destroy (gameObject);
+            this.Death();
         }
         if (this.state == EnemyState.Normal) {
             this.aiPath.enabled = true;
@@ -99,7 +100,6 @@ public class Enemy : MonoBehaviour {
         if (this.lastUnit != null && currentUnit == this.lastUnit ) {
             this.stopCount += 1;
             if (this.stopCount > 120) {
-               Debug.Log ("Stop"); 
                this.stopCount = 0;
                this.SetRandomRoom();
                this.aiPath.TrySearchPath();
@@ -139,10 +139,10 @@ public class Enemy : MonoBehaviour {
         StopCoroutine("StartAttackAnimation");
     }
     
-    public void Death () {
-        Destroy (this.gameObject);
-        GameObject radar = GameObject.FindWithTag ("Radar");
-        radar.SendMessage ("DestroyChip", this.gameObject);
+    virtual public void Death () {
+        Destroy (this.gameObject); 
+        GameObject controller = GameObject.FindWithTag("GameController");
+        controller.SendMessage("DestroyEnemy", this.gameObject);
     }
     
     private void ChangeState () {

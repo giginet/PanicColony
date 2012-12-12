@@ -311,7 +311,7 @@ public class LevelManager : MonoBehaviour {
                 }
             }
             GameObject controller = GameObject.FindWithTag("GameController");
-            controller.SendMessage("BombEnemy", enemies);
+            controller.SendMessage("DestroyEnemy", enemies);
             this.AddExplosion(unit);
         } 
     }
