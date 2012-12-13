@@ -40,6 +40,8 @@ public class Gate : MonoBehaviour {
             }
         }
         if (this.HP <= 0) {
+            AudioClip clip = (AudioClip)Resources.Load("Sounds/door_break");
+            GameObject.Find("AudioPlayer").audio.PlayOneShot(clip);
             Destroy(this.gameObject);
         }
     }
