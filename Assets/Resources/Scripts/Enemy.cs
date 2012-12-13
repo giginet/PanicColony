@@ -10,7 +10,9 @@ public class Enemy : MonoBehaviour {
         Damage,
         Attack,
         Shocking,
-        Death
+        Death,
+        PlayerDeathIntro,
+        PlayerDeath
     }
     
     enum EnemyActionState {
@@ -83,6 +85,10 @@ public class Enemy : MonoBehaviour {
                 this.shockTime = 0;
                 this.state = EnemyState.Normal;
             }
+        } else if (this.state == EnemyState.PlayerDeath) {
+            if (!this.worm.animation.IsPlaying("win")) {
+                this.worm.animation.CrossFade("win");
+            }
         }
         this.ChangeState();
         this.Action ();
@@ -126,8 +132,16 @@ public class Enemy : MonoBehaviour {
         yield return new WaitForSeconds(this.worm.animation["attack"].length / 1.5f);
         if (Vector3.Distance (player.transform.position, this.transform.position) < this.attackRange) {
             player.SendMessage ("Death", true);
+           this.state = EnemyState.PlayerDeathIntro;             
+            StartCoroutine(this.PlayWinMotion());
         }
         this.state = EnemyState.Normal;
+    }
+    
+    IEnumerator PlayWinMotion () {
+        this.worm.animation.CrossFade("win_intro");
+        yield return new WaitForSeconds(this.worm.animation["win_intro"].length);
+        this.state = EnemyState.PlayerDeath;             
     }
     
     virtual public void Shock () {
@@ -136,6 +150,8 @@ public class Enemy : MonoBehaviour {
         this.shockTime = 0;
         this.worm.animation.Stop("walk");
         this.worm.animation.Stop("attack");
+        this.worm.animation.Stop("win_intro");
+        this.worm.animation.Stop("win");
         StopCoroutine("StartAttackAnimation");
     }
     

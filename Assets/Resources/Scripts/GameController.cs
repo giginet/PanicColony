@@ -232,12 +232,13 @@ public class GameController : MonoBehaviour {
     
     IEnumerator Clear () {
         this.state = GameState.Clear;
-        this.StopMainMusic();
-        yield return new WaitForSeconds(3.0f);        
+        for (int i = 0; i < 10; ++i) {
+            this.audio.volume -= 0.1f;
+            yield return new WaitForSeconds(0.25f);
+        }
+        yield return new WaitForSeconds(0.5f);
+        //this.StopMainMusic();
         GameObject.FindWithTag("Player").SendMessage("SetClearState");
-        AudioClip clip = (AudioClip)Resources.Load("Sounds/clear");
-        this.audio.clip = clip;
-        this.audio.PlayOneShot(clip);
         int sum = 0;
         int remain = 0;
         foreach (Room room in this.levelManager.GetComponent<LevelManager>().GetLevel().GetRooms()) { 
@@ -252,7 +253,7 @@ public class GameController : MonoBehaviour {
         float percent = (float)remain / (float)sum;
         int score = (int)(this.roomBonus * percent);
         this.AddScore(0, score);
-        yield return new WaitForSeconds(6.0f);        
+        yield return new WaitForSeconds(7.0f);        
         this.NextStage();
     }
     
@@ -325,6 +326,7 @@ public class GameController : MonoBehaviour {
     }
     
     public void PlaySound (string fileName) {
+        this.audio.volume = 1.0f;
         this.audio.Stop();
         StopCoroutine("StopMainMusic");
         AudioClip clip = (AudioClip)Resources.Load(fileName);
@@ -339,7 +341,6 @@ public class GameController : MonoBehaviour {
     IEnumerator PlayMainMusic () {
         this.audio.clip = (AudioClip)Resources.Load("Sounds/main_intro");
         this.audio.Play();
-        Debug.Log("PlayMain");
         yield return new WaitForSeconds(this.audio.clip.length);
         this.audio.clip = (AudioClip)Resources.Load("Sounds/main_loop");
         this.audio.loop = true;

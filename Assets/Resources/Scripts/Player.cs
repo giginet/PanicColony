@@ -224,12 +224,19 @@ public class Player : MonoBehaviour {
         renderer.enabled = false;  
         this.SetControl(false);
         this.state = PlayerState.Clear;
-        this.animation.Play("clear");
         JoyStickController controller = this.GetComponent<JoyStickController>();
-        controller.cameraControl.distance = 1.2f;
+        controller.cameraControl.distance = 1.5f;
+        controller.cameraControl.height = 0.5f;
         Vector3 angle = controller.GetWantedCameraAngle();
-        angle.y = -15;
+        angle.y = -5;
         controller.SetWantedCameraAngle(angle);
+        StartCoroutine(this.PlayClearMotion());
+    }
+    
+    IEnumerator PlayClearMotion () {
+        yield return new WaitForSeconds(1.0f);
+        GameObject.FindWithTag("GameController").SendMessage("PlaySound", "Sounds/clear");
+        this.animation.Play("clear");
     }
     
     IEnumerator Miss () {

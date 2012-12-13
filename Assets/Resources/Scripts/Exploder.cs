@@ -22,7 +22,7 @@ public class Exploder : MonoBehaviour {
             manager.BombRoom(room);
         } else {
             GameObject audioPlayer = GameObject.Find("AudioPlayer");
-            AudioClip miss = (AudioClip)Resources.Load("Sounds/bomb_miss2");
+            AudioClip miss = (AudioClip)Resources.Load("Sounds/bomb_miss");
             audioPlayer.audio.PlayOneShot(miss);
         }
         Destroy(gameObject);
