@@ -159,6 +159,16 @@ public class LevelManager : MonoBehaviour {
         PointGraph graph = path.graphs[0] as PointGraph;
         graph.Scan();
         path.FlushGraphUpdates();
+        // Set warning floor Material
+        /*Material warningMaterial = (Material)Resources.Load("Materials/warningFloorMaterial");
+        foreach (Room room in this.GetLevel().GetRooms()) {
+            if (room.IsProtect()) {
+                foreach (Vector2 pos in room.GetFloors()) {
+                    GameObject obj = this.GetLevel().GetObject(pos);
+                    obj.transform.Find("floor/Plane").renderer.material = warningMaterial;
+                }
+            }
+        }*/
     }
     
     private void CreateRooms () {

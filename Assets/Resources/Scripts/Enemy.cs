@@ -86,7 +86,7 @@ public class Enemy : MonoBehaviour {
                 this.state = EnemyState.Normal;
             }
         } else if (this.state == EnemyState.PlayerDeath) {
-            if (!this.worm.animation.IsPlaying("win")) {
+            if (this.worm != null && !this.worm.animation.IsPlaying("win")) {
                 this.worm.animation.CrossFade("win");
             }
         }
@@ -111,7 +111,11 @@ public class Enemy : MonoBehaviour {
                this.aiPath.TrySearchPath();
             }
         }
-        this.lastUnit = currentUnit;
+        this.lastUnit = currentUnit; 
+        this.OnPlayerIsDead(); 
+    }
+    
+    virtual public void OnPlayerIsDead () {
         // win motion (when player is dead.)
         foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
             if (player.GetComponent<Player>().IsDead() && this.state != EnemyState.PlayerDeathIntro && this.state != EnemyState.PlayerDeathIntro) {
@@ -147,7 +151,7 @@ public class Enemy : MonoBehaviour {
     }
     
     IEnumerator PlayWinMotion () {
-        this.worm.animation.CrossFade("win_intro");
+        this.worm.animation.Play("win_intro");
         yield return new WaitForSeconds(this.worm.animation["win_intro"].length);
         this.state = EnemyState.PlayerDeath;             
     }
