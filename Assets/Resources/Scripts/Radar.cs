@@ -70,14 +70,16 @@ public class Radar : MonoBehaviour {
     }
     
     private void UpdateChip () {
-        string[] tags = {"Player", "Enemy", "Bomb", "Shutter", "Gate", "Switch", "BrokenWall", "Absorber"};
+        string[] tags = {"Player", "Enemy", "Bomb", "Shutter", "Gate", "Switch", "BrokenWall", "Absorber", "Vegetable"};
         GameObject levelObject = this.levelManager.GetLevelObject();
         foreach (string name in tags) {
             foreach (GameObject obj in GameObject.FindGameObjectsWithTag(name)) {
                 if (chips.ContainsKey(obj)) {
                     GameObject chip = this.chips[obj];
                     chip.transform.localPosition = levelObject.transform.TransformPoint(obj.transform.position) / this.levelManager.WIDTH;
-                    chip.transform.localRotation = obj.transform.localRotation; 
+                    if (name == "Player" || name == "Enemy") {
+                        chip.transform.localRotation = obj.transform.localRotation;
+                    }
                     if (name == "Gate") {
                         Gate gate = obj.GetComponent<Gate>();
                         chip.renderer.enabled = !gate.IsOpen();
@@ -117,6 +119,7 @@ public class Radar : MonoBehaviour {
         GameObject chip = (GameObject)Instantiate(prefab, Vector3.zero, Quaternion.identity);
         chip.transform.parent = this.transform;
         chip.transform.localPosition = obj.transform.localPosition / levelManager.WIDTH; 
+        chip.transform.eulerAngles = Vector3.up * 180;
         this.chips.Add(obj, chip);
     }
     

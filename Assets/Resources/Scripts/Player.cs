@@ -7,7 +7,8 @@ public class Player : MonoBehaviour {
         Normal,
         Shock,
         DeathAnimation,
-        Death
+        Death,
+        Clear
     };
    
     public int playerNumber = 0;
@@ -19,9 +20,9 @@ public class Player : MonoBehaviour {
     private GameObject shockEffect = null;
     private bool canControl = true;
     private JoyStickController controller = null;
-    private float deathTimer = 0;
     private PlayerState state = PlayerState.Normal;
     private float preYAxis = 0;
+    private float deathTimer = 0;
     private GameObject head = null;
     private LineRenderer renderer = null;
     private float shootingTimer = 0.0f;
@@ -157,17 +158,11 @@ public class Player : MonoBehaviour {
         } 
         if (this.state == PlayerState.DeathAnimation) {
             this.animation.Stop();
-            this.head.transform.Rotate (Vector3.right * ((1.0f - deathTimer) * 120));
             this.deathTimer += Time.deltaTime;
-            if (deathTimer > 2.9) {
-                this.state = PlayerState.Death;
-                this.DestroyBody ();
-                GameObject controller = GameObject.FindWithTag ("GameController");
-                controller.SendMessage ("Miss", this.playerNumber);
-            }
+            this.head.transform.Rotate (Vector3.right * (1.0f - deathTimer / 2.9f) * 120); 
         }
-        if (this.transform.position.y < -10) {
-            this.Death ();
+        if (this.transform.position.y < -1 && this.state != PlayerState.DeathAnimation && this.state != PlayerState.Death) {
+            this.Death (false);
         }
     }
     
@@ -180,19 +175,22 @@ public class Player : MonoBehaviour {
         return false;
     }
     
-    void Death () {
-        if (this.state != PlayerState.Normal)
-            return;
+    void Death (bool damage) {
         Destroy (shockEffect);
         shockEffect = null;
         LineRenderer renderer = this.GetComponent<LineRenderer> (); 
         renderer.enabled = false;  
-        this.SetControl (false);
-        this.audio.volume = 0;
-        this.state = PlayerState.DeathAnimation;
         GameObject controller = GameObject.FindWithTag ("GameController");
-        controller.SendMessage ("PlaySound", "Sounds/gameover0");
         controller.SendMessage ("StopMainMusic");
+        controller.SendMessage ("PlaySound", "Sounds/gameover0");
+        this.state = PlayerState.DeathAnimation;
+        if (damage) {
+            this.SetControl (false);
+            this.audio.volume = 0;
+        } else {
+            controller.SendMessage ("Miss", this.playerNumber);
+        }
+        StartCoroutine(this.Miss());
     }
     
     void DestroyBody () {
@@ -219,6 +217,29 @@ public class Player : MonoBehaviour {
     
     public PlayerState GetPlayerState () {
         return this.state;
+    }
+    
+    void SetClearState () {
+        LineRenderer renderer = this.GetComponent<LineRenderer> (); 
+        renderer.enabled = false;  
+        this.SetControl(false);
+        this.state = PlayerState.Clear;
+        this.animation.Play("clear");
+        JoyStickController controller = this.GetComponent<JoyStickController>();
+        controller.cameraControl.distance = 1.2f;
+        Vector3 angle = controller.GetWantedCameraAngle();
+        angle.y = -15;
+        controller.SetWantedCameraAngle(angle);
+    }
+    
+    IEnumerator Miss () {
+        yield return new WaitForSeconds(2.9f);
+        this.state = PlayerState.Death;
+        this.DestroyBody ();
+        GameObject controller = GameObject.FindWithTag ("GameController");
+        controller.SendMessage ("Miss", this.playerNumber);
+        this.SetControl(false);
+        this.deathTimer = 0.0f;
     }
 }
 

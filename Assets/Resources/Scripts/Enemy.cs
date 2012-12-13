@@ -125,7 +125,7 @@ public class Enemy : MonoBehaviour {
         this.worm.animation.CrossFade("attack"); 
         yield return new WaitForSeconds(this.worm.animation["attack"].length / 1.5f);
         if (Vector3.Distance (player.transform.position, this.transform.position) < this.attackRange) {
-            player.SendMessage ("Death");
+            player.SendMessage ("Death", true);
         }
         this.state = EnemyState.Normal;
     }
