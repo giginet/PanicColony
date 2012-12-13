@@ -346,7 +346,6 @@ public class LevelManager : MonoBehaviour {
                 destroyRooms.Add (r);
                 origin.SetEnable(true);
                 int distance = this.level.CalcDistance(origin, r);
-                Debug.Log("Room Distance = " + distance.ToString());
                 roomDistances.Add(distance);
                 origin.SetEnable(false);
             }
@@ -367,7 +366,6 @@ public class LevelManager : MonoBehaviour {
                 origin.SetEnable(true);
                 int distance = this.level.CalcDistance(origin, route);
                 origin.SetEnable(false);
-                Debug.Log("Route Distance = " + distance.ToString());
                 this.StartCoroutine(this.DestroyUnitDelay(route, distance));
             }
         }  
@@ -401,11 +399,13 @@ public class LevelManager : MonoBehaviour {
         string sound = "Sounds/explosion" + explosion.ToString();
         GameObject explosionPrefab = (GameObject)Resources.Load("Prefabs/bombExplosionPrefab");
         AudioClip clip = (AudioClip)Resources.Load(sound);
-        Instantiate(explosionPrefab, this.MatrixToPosition(unit.GetCenter()), Quaternion.identity);
+        GameObject exp = (GameObject)Instantiate(explosionPrefab, this.MatrixToPosition(unit.GetCenter()), Quaternion.identity);
         GameObject audioPlayer = GameObject.Find ("AudioPlayer");
-        if (!audioPlayer.audio.isPlaying) {
+        /*if (!audioPlayer.audio.isPlaying) {
             audioPlayer.audio.PlayOneShot(clip);
-        }
+        }*/
+        exp.audio.PlayOneShot(clip);
+        //exp.audio.pitch = 0.25f * (1 + explosion);
     }
     
     public void AttachBomb (GameObject bomb) {

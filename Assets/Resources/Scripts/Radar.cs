@@ -52,7 +52,7 @@ public class Radar : MonoBehaviour {
                 this.tiles.Add(p, floor);
             }
         } 
-        string[] tags = {"Player", "Enemy"};
+        string[] tags = {"Player", "Enemy", "Gate", "Switch", "BrokenWall"};
         foreach (string name in tags) {
             foreach (GameObject obj in GameObject.FindGameObjectsWithTag(name)) {
                 GameObject prefab = (GameObject)Resources.Load("Prefabs/Radar/" + name.ToLower() + "RadarPrefab", typeof(GameObject));
@@ -70,17 +70,24 @@ public class Radar : MonoBehaviour {
     }
     
     private void UpdateChip () {
-        string[] tags = {"Player", "Enemy", "Bomb"};
+        string[] tags = {"Player", "Enemy", "Bomb", "Shutter", "Gate", "Switch", "BrokenWall", "Absorber"};
+        GameObject levelObject = this.levelManager.GetLevelObject();
         foreach (string name in tags) {
             foreach (GameObject obj in GameObject.FindGameObjectsWithTag(name)) {
                 if (chips.ContainsKey(obj)) {
                     GameObject chip = this.chips[obj];
-                    chip.transform.localPosition = obj.transform.localPosition / levelManager.WIDTH; 
-                    chip.transform.localRotation = obj.transform.localRotation;
+                    chip.transform.localPosition = levelObject.transform.TransformPoint(obj.transform.position) / this.levelManager.WIDTH;
+                    chip.transform.localRotation = obj.transform.localRotation; 
+                    if (name == "Gate") {
+                        Gate gate = obj.GetComponent<Gate>();
+                        chip.renderer.enabled = !gate.IsOpen();
+                    }
                 } else {
-                    GameObject prefab = (GameObject)Resources.Load("Prefabs/Radar/" + name.ToLower() + "RadarPrefab", typeof(GameObject));
+                    string camel = char.ToLower(name[0]) + name.Substring(1, name.Length - 1);
+                    GameObject prefab = (GameObject)Resources.Load("Prefabs/Radar/" + camel + "RadarPrefab", typeof(GameObject));
                     this.AddChip(obj, prefab);
                 }
+                
             }
         }
         List<GameObject> outdated = new List<GameObject>();
@@ -93,6 +100,11 @@ public class Radar : MonoBehaviour {
     }
     
     private void DestroyUnit (Unit unit) {
+        Vector2 center = unit.GetCenter();
+        GameObject explosionPrefab = (GameObject)Resources.Load ("Prefabs/Radar/explosionRadarPrefab", typeof(GameObject));
+        GameObject explosion = (GameObject)Instantiate(explosionPrefab, Vector3.zero, Quaternion.identity);
+        explosion.transform.parent = this.transform;
+        explosion.transform.localPosition = this.levelManager.MatrixToPosition(center) / this.levelManager.WIDTH;
         foreach (Vector2 floor in unit.GetFloors()) {
             if (!tiles.ContainsKey(floor)) continue;
             GameObject tile = this.tiles[floor];

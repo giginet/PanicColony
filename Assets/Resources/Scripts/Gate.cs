@@ -75,4 +75,8 @@ public class Gate : MonoBehaviour {
             this.isOpeaning = false;
         }
     }
+    
+    public bool IsOpen () {
+        return this.isOpeaning;
+    }
 }
