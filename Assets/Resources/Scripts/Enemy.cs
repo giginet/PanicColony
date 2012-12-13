@@ -112,6 +112,14 @@ public class Enemy : MonoBehaviour {
             }
         }
         this.lastUnit = currentUnit;
+        // win motion (when player is dead.)
+        foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
+            if (player.GetComponent<Player>().IsDead() && this.state != EnemyState.PlayerDeathIntro && this.state != EnemyState.PlayerDeathIntro) {
+                this.state = EnemyState.PlayerDeathIntro;
+                this.aiPath.canMove = false;
+                StartCoroutine(this.PlayWinMotion());
+            }
+        }
     }
     
     virtual public bool Attack () {

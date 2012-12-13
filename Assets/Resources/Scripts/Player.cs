@@ -175,7 +175,12 @@ public class Player : MonoBehaviour {
         return false;
     }
     
+    public bool IsDead () {
+        return this.state == PlayerState.DeathAnimation || this.state == PlayerState.Death;
+    }
+    
     void Death (bool damage) {
+        if (this.IsDead()) return;
         Destroy (shockEffect);
         shockEffect = null;
         LineRenderer renderer = this.GetComponent<LineRenderer> (); 
