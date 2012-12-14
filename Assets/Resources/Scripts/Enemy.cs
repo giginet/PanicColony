@@ -233,7 +233,7 @@ public class Enemy : MonoBehaviour {
             Unit playerUnit = this.levelManager.GetUnit(player.transform.position);
             if (playerUnit == this.levelManager.GetUnit(this.transform.position)) {
                 this.aiPath.speed = this.fastSpeed;
-                if (playerUnit == this.levelManager.GetUnit(this.aiPath.target.position)) {
+                if (this.aiPath.target && playerUnit == this.levelManager.GetUnit(this.aiPath.target.position)) {
                     this.SetRandomRoom();
                 }
             }

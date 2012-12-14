@@ -18,7 +18,7 @@ public class TutorialWindow {
     }
 
     public void Draw () {
-        GUI.DrawTexture(this.rect, this.texture, ScaleMode.ScaleToFit, true, this.texture.width / this.texture.height);
+        GUI.DrawTexture(this.rect, this.texture, ScaleMode.ScaleToFit, true, this.rect.width / this.rect.height);
     }
     
     public void Next () {

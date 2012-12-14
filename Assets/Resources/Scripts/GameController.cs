@@ -295,6 +295,10 @@ public class GameController : MonoBehaviour {
     
     public void AddScore (int player, int score) {
         this.targetScores[player] += score;
+        int hiscore = PlayerPrefs.GetInt("HiScore");;
+        if (hiscore < targetScores[player]) {
+            PlayerPrefs.SetInt("HiScore", targetScores[player]);;
+        }
     }
     
     

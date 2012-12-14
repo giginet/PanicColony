@@ -4,6 +4,7 @@ using System.Collections;
 public class TitleController : MonoBehaviour {
 
     private bool pressed = false;
+    private int hiscore = 0;
     private Texture2D logoTexture = null;
     private Texture2D pressTexture = null;
 
@@ -15,6 +16,10 @@ public class TitleController : MonoBehaviour {
         this.audio.clip = clip;
         this.audio.loop = true;
         this.audio.Play();
+        this.hiscore = PlayerPrefs.GetInt("HiScore");;
+        if (hiscore < 20000) {
+            PlayerPrefs.SetInt("HiScore", 20000);;
+        }
     }
     
     // Update is called once per frame
@@ -57,5 +62,9 @@ public class TitleController : MonoBehaviour {
         style.alignment = TextAnchor.MiddleCenter;
         style.fontSize = 12;
         GUI.Label(new Rect((Screen.width - 400) / 2, Screen.height - 40, 400, 20), "(c)2009-2012 Kawaz All right reserved.", style);    
+        style.fontSize = 24;
+        style.alignment = TextAnchor.MiddleLeft;
+        GUI.Label(new Rect(40, 40, 100, 36), "HI SCORE", style);    
+        GUI.Label(new Rect(180, 40, 100, 36), this.hiscore.ToString(), style);    
     } 
 }
