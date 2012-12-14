@@ -46,6 +46,11 @@ public class BombEnemy : Enemy {
         yield return new WaitForSeconds(0.0f);
     }
     
+    override protected IEnumerator PlayAttackGateMotion (Gate gate) { 
+        yield return new WaitForSeconds(3.5f);
+        gate.gameObject.SendMessage("Damage", 10);
+    }
+    
     private IEnumerator BombRoom () {
         Room room = null;
         yield return new WaitForSeconds(1.0f);

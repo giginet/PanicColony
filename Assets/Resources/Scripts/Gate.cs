@@ -33,16 +33,23 @@ public class Gate : MonoBehaviour {
                 this.Close();
             }
         }
-        this.Move();
+        this.Move(); 
         foreach (GameObject enemy in GameObject.FindGameObjectsWithTag("Enemy")) {
             if (Vector3.Distance(enemy.transform.position, this.transform.position) < 3.0) {
-                this.HP -= 1;
+                enemy.SendMessage("AttackGate", this);
             }
         }
+    }
+    
+    private void Damage (int damage) {
+        this.HP -= damage; 
         if (this.HP <= 0) {
-            AudioClip clip = (AudioClip)Resources.Load("Sounds/door_break");
+            AudioClip clip = (AudioClip)Resources.Load("Sounds/gate_break");
             GameObject.Find("AudioPlayer").audio.PlayOneShot(clip);
             Destroy(this.gameObject);
+        } else {
+            AudioClip clip = (AudioClip)Resources.Load("Sounds/gate_hit");
+            this.audio.PlayOneShot(clip);
         }
     }
     

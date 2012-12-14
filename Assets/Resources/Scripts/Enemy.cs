@@ -65,6 +65,22 @@ public class Enemy : MonoBehaviour {
         this.transform.position = this.initialPosition;
     }
     
+    void AttackGate (Gate gate) {
+        if (this.state != EnemyState.Attack) {
+            this.state = EnemyState.Attack;
+            StartCoroutine(this.PlayAttackGateMotion(gate));
+        }
+    }
+    
+    virtual protected IEnumerator PlayAttackGateMotion (Gate gate) { 
+        this.worm.animation.Play("attack");
+        yield return new WaitForSeconds(this.worm.animation["attack"].length / 1.5f);
+        if (gate != null) {
+            gate.gameObject.SendMessage("Damage", 1);
+            this.state = EnemyState.Normal;
+        }
+    }
+    
     protected virtual void Update () {
         if (this.transform.position.y < -10) {
             this.Death();
@@ -131,7 +147,7 @@ public class Enemy : MonoBehaviour {
             if (Vector3.Distance (player.transform.position, this.transform.position) < this.attackRange) {
                 if (this.state != EnemyState.Attack && !this.worm.animation.IsPlaying("attack") && player.GetComponent<Player>().GetPlayerState() == Player.PlayerState.Normal) {
                     this.state = EnemyState.Attack;
-                    StartCoroutine(this.StartAttackAnimation(player));
+                    StartCoroutine(this.PlayAttackMotion(player));
                     return true;
                 }
             }
@@ -139,7 +155,7 @@ public class Enemy : MonoBehaviour {
         return false;
     }
     
-    IEnumerator StartAttackAnimation (GameObject player) {
+    IEnumerator PlayAttackMotion (GameObject player) {
         this.worm.animation.CrossFade("attack"); 
         yield return new WaitForSeconds(this.worm.animation["attack"].length / 1.5f);
         if (Vector3.Distance (player.transform.position, this.transform.position) < this.attackRange) {
@@ -164,7 +180,8 @@ public class Enemy : MonoBehaviour {
         this.worm.animation.Stop("attack");
         this.worm.animation.Stop("win_intro");
         this.worm.animation.Stop("win");
-        StopCoroutine("StartAttackAnimation");
+        StopCoroutine("PlayAttackMotion");
+        StopCoroutine("PlayGateAttackMotion");
     }
     
     virtual public void Death () {
