@@ -27,6 +27,7 @@ public class GameController : MonoBehaviour {
     private Texture2D scoreLabelTexture = null;
     private Texture2D stageLabelTexture = null;
     private Texture2D lifeTexture = null;
+    private Texture2D continueTexture = null;
     private NumberTexture scoreNumberTexture = null;
     private NumberTexture stageNumberTexture = null;
     private TutorialWindow tutorialWindow = null;
@@ -48,6 +49,7 @@ public class GameController : MonoBehaviour {
         this.scoreLabelTexture = (Texture2D)Resources.Load("UI/score");
         this.stageLabelTexture = (Texture2D)Resources.Load("UI/stage");
         this.lifeTexture = (Texture2D)Resources.Load ("UI/life");
+        this.continueTexture = (Texture2D)Resources.Load ("UI/continue");
         this.scoreNumberTexture = new NumberTexture("UI/numbers", 37, 50);
         this.stageNumberTexture = new NumberTexture("UI/numbers", 37, 50);
         this.audio.volume = this.maxVolume;
@@ -168,6 +170,16 @@ public class GameController : MonoBehaviour {
             }
         } else if (this.state == GameState.Tutorial) {
             this.tutorialWindow.Draw();
+        } else if (this.state == GameState.Miss) {
+            float alpha = 1.0f;
+            alpha = 0.25f + Mathf.PingPong(Time.time / 2.0f, 0.75f);
+            Color previous = GUI.color;
+            Color color = new Color(previous.r, previous.g, previous.b, alpha);
+            GUI.color = color;
+            int width = this.continueTexture.width;
+            int height = this.continueTexture.height;
+            GUI.DrawTexture(new Rect((Screen.width - width) / 2.0f, (Screen.height - height) / 1.2f, width, height), this.continueTexture);
+            GUI.color = previous;
         } else if (this.state == GameState.GameOver) {
             GUIStyle labelStyle = new GUIStyle();
             labelStyle.fontSize = 64;
@@ -181,6 +193,15 @@ public class GameController : MonoBehaviour {
             int height = Screen.height;
             GUI.Label(new Rect(width / 2 - 300 + 3, height / 2 - 200 + 3, 600, 400), "Game Over", shadowLabelStyle);
             GUI.Label(new Rect(width / 2 - 300, height / 2 - 200, 600, 400), "Game Over", labelStyle);
+            float alpha = 1.0f;
+            alpha = 0.25f + Mathf.PingPong(Time.time / 2.0f, 0.75f);
+            Color previous = GUI.color;
+            Color color = new Color(previous.r, previous.g, previous.b, alpha);
+            GUI.color = color;
+            width = this.continueTexture.width;
+            height = this.continueTexture.height;
+            GUI.DrawTexture(new Rect((Screen.width - width) / 2.0f, (Screen.height - height) / 1.2f, width, height), this.continueTexture);
+            GUI.color = previous;
         }
    }
    
