@@ -42,6 +42,10 @@ public class BombEnemy : Enemy {
         } 
     }
     
+    override protected IEnumerator PlayWinMotion () {
+        yield return new WaitForSeconds(0.0f);
+    }
+    
     private IEnumerator BombRoom () {
         Room room = null;
         yield return new WaitForSeconds(1.0f);
@@ -51,6 +55,8 @@ public class BombEnemy : Enemy {
                 this.audio.Play();
                 float second = Mathf.Max(0.1f, 1.0f - i * 0.1f);
                 yield return new WaitForSeconds(second);
+            } else {
+                this.audio.clip = null;
             }
         }
         room = this.levelManager.GetRoom(this.transform.position);   

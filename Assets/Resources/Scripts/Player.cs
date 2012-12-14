@@ -16,6 +16,7 @@ public class Player : MonoBehaviour {
     public int rotateSpeed = 5;
     public float speed = 10;
     public GameObject muzzle = null;
+    public int shotRange = 30;
     private GameObject bomb = null;
     private GameObject shockEffect = null;
     private bool canControl = true;
@@ -83,7 +84,7 @@ public class Player : MonoBehaviour {
         Vector3 screenPoint = Camera.main.WorldToScreenPoint (this.transform.position);
         Ray ray = new Ray (this.muzzle.transform.position, this.transform.forward);
         RaycastHit hit;
-        if (Physics.Raycast (ray, out hit, 100)) {
+        if (Physics.Raycast (ray, out hit, this.shotRange)) {
             this.Shot (ray, hit); 
         } 
         if (this.isShooting) {
@@ -106,7 +107,7 @@ public class Player : MonoBehaviour {
             if (hit.collider != null) {       
                 renderer.SetPosition (1, hit.point);
             } else {
-                renderer.SetPosition (1, this.muzzle.transform.position + this.transform.forward * 100);
+                renderer.SetPosition (1, this.muzzle.transform.position + this.transform.forward * this.shotRange);
             }
             if (hit.collider != null) {
                 if (hit.collider.gameObject.CompareTag ("Enemy")) {
@@ -189,12 +190,8 @@ public class Player : MonoBehaviour {
         controller.SendMessage ("StopMainMusic");
         controller.SendMessage ("PlaySound", "Sounds/gameover0");
         this.state = PlayerState.DeathAnimation;
-        if (damage) {
-            this.SetControl (false);
-            this.audio.volume = 0;
-        } else {
-            controller.SendMessage ("Miss", this.playerNumber);
-        }
+        this.audio.volume = 0;
+        this.SetControl (false);
         StartCoroutine(this.Miss());
     }
     
@@ -214,7 +211,7 @@ public class Player : MonoBehaviour {
     
     void SetControl (bool c) {
         this.canControl = c;
-        this.GetComponent<CharacterMotor>().enabled = c;
+        this.GetComponent<CharacterMotor>().canControl = c;
         this.GetComponent<JoyStickController>().cameraControl.horizontalControl.enabled = c;
         this.GetComponent<JoyStickController>().cameraControl.verticalControl.enabled = c;
         if (!c) this.audio.volume = 0;

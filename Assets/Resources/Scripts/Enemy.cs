@@ -150,7 +150,7 @@ public class Enemy : MonoBehaviour {
         this.state = EnemyState.Normal;
     }
     
-    IEnumerator PlayWinMotion () {
+    virtual protected IEnumerator PlayWinMotion () {
         this.worm.animation.Play("win_intro");
         yield return new WaitForSeconds(this.worm.animation["win_intro"].length);
         this.state = EnemyState.PlayerDeath;             

@@ -10,6 +10,7 @@ public class GameController : MonoBehaviour {
     public int roomBonus = 3000;
     public int maxLife = 15;
     public int[] tutorialPages = {};
+    public float maxVolume = 0.2f;
     
     private GameState state = GameState.Start;
     private GameObject levelManager = null;
@@ -49,6 +50,7 @@ public class GameController : MonoBehaviour {
         this.lifeTexture = (Texture2D)Resources.Load ("UI/life");
         this.scoreNumberTexture = new NumberTexture("UI/numbers", 37, 50);
         this.stageNumberTexture = new NumberTexture("UI/numbers", 37, 50);
+        this.audio.volume = this.maxVolume;
         
         this.state = GameState.Start;
         this.levelManager = GameObject.FindWithTag("LevelManager");
@@ -59,27 +61,11 @@ public class GameController : MonoBehaviour {
         this.lives[1] = this.initialLife;
         this.startAnimation = new Animation2D(new Rect((Screen.width - 800) / 2, (Screen.height - 600) / 2, 800, 600), "UI/Start/start", 57);
         this.destroyedEnemies = new List<Enemy>();
-        this.audio.volume = 0.2f;
         this.Replay();
     }
     
     void Update () { 
-        if (this.state == GameState.Start) {
-            this.timer += Time.deltaTime;
-            if (timer > 1.0f && !this.startAnimation.IsPlaying()) {
-                this.startAnimation.Play();
-            } else if (timer > 4.5f) {
-                this.timer = 0;
-                StartCoroutine(this.PlayMainMusic());
-                if (this.currentLevel < this.tutorialPages.Length) {
-                    this.state = GameState.Tutorial;
-                    string prefix = "UI/tutorial/tutorial" + this.currentLevel.ToString() + "_";
-                    this.tutorialWindow = new TutorialWindow(prefix, this.tutorialPages[this.currentLevel], new Rect((Screen.width - 960) / 2.0f, (Screen.height - 720) / 2.0f, 960, 720));
-                } else {
-                    this.state = GameState.Main;
-                    this.SetCharacterCanMove(true);
-                }
-            }
+        if (this.state == GameState.Start) {  
             this.startAnimation.Update();
         } else if (this.state == GameState.Tutorial) {
             if (Input.anyKeyDown || Input.GetButtonDown("Start")) {
@@ -100,6 +86,21 @@ public class GameController : MonoBehaviour {
         }
         for (int i = 0; i < this.players.Count; ++i) {
             this.UpdateScore(i);
+        }
+    }
+    
+    IEnumerator OnStartState () {
+        yield return new WaitForSeconds(1.0f);
+        this.startAnimation.Play();
+        yield return new WaitForSeconds(3.4f);
+        StartCoroutine(this.PlayMainMusic());
+        if (this.currentLevel < this.tutorialPages.Length) {
+            this.state = GameState.Tutorial;
+            string prefix = "UI/tutorial/tutorial" + this.currentLevel.ToString() + "_";
+            this.tutorialWindow = new TutorialWindow(prefix, this.tutorialPages[this.currentLevel], new Rect((Screen.width - 960) / 2.0f, (Screen.height - 720) / 2.0f, 960, 720));
+        } else {
+            this.state = GameState.Main;
+            this.SetCharacterCanMove(true);
         }
     }
     
@@ -196,6 +197,7 @@ public class GameController : MonoBehaviour {
         GameObject radar = (GameObject)Resources.Load("Prefabs/radarPrefab");
         Instantiate(radar, Vector3.zero, Quaternion.identity);
         this.state = GameState.Start;
+        this.StartCoroutine(this.OnStartState());
         foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
             this.players.Add(player);
         }
@@ -232,8 +234,9 @@ public class GameController : MonoBehaviour {
     
     IEnumerator Clear () {
         this.state = GameState.Clear;
-        for (int i = 0; i < 10; ++i) {
-            this.audio.volume -= 0.1f;
+        const int count = 10;
+        for (int i = 0; i < count; ++i) {
+            this.audio.volume -= this.maxVolume / (float)count;
             yield return new WaitForSeconds(0.25f);
         }
         yield return new WaitForSeconds(0.5f);
@@ -326,7 +329,7 @@ public class GameController : MonoBehaviour {
     }
     
     public void PlaySound (string fileName) {
-        this.audio.volume = 1.0f;
+        this.audio.volume = this.maxVolume;
         this.audio.Stop();
         StopCoroutine("StopMainMusic");
         AudioClip clip = (AudioClip)Resources.Load(fileName);

@@ -113,10 +113,18 @@ public class LevelManager : MonoBehaviour {
                     }
                 } else {
                     if (isCorner) {
-                        if (level.IsFloor(x, y - 1) || level.IsWall(x, y - 1)) {
-                            wall.transform.Translate(Vector3.forward * -0.1f);
-                        } else if (level.IsFloor(x, y + 1) || level.IsWall(x, y + 1)) {
-                            wall.transform.Translate(Vector3.forward * 0.1f);
+                        // cornerWall
+                        if (level.IsRoute(x, y - 1)) {
+                            Destroy(wall.transform.Find("up").gameObject);
+                        }
+                        if (level.IsRoute(x, y + 1)) {
+                            Destroy(wall.transform.Find("down").gameObject);
+                        }
+                        if (level.IsRoute(x - 1, y)) {
+                            Destroy(wall.transform.Find("left").gameObject);
+                        }
+                        if (level.IsRoute(x + 1, y)) {
+                            Destroy(wall.transform.Find("right").gameObject);
                         }
                     } else {
                         if (level.IsFloor(x, y - 1) || level.IsFloor(x - 1, y - 1) || level.IsFloor(x + 1, y - 1) ) {
@@ -165,7 +173,9 @@ public class LevelManager : MonoBehaviour {
             if (room.IsProtect()) {
                 foreach (Vector2 pos in room.GetFloors()) {
                     GameObject obj = this.GetLevel().GetObject(pos);
+                    Destroy(obj.transform.Find("floor/Plane").renderer.material);
                     obj.transform.Find("floor/Plane").renderer.material = warningMaterial;
+                    obj.transform.Find("floor/Plane").renderer.useLightProbes = false;
                 }
             }
         }
@@ -309,21 +319,27 @@ public class LevelManager : MonoBehaviour {
         foreach (Vector2 point in unit.GetFloors()) {
             this.DestroyTile(point, rigidbody);
         }
-        
-        if (unit.IsEnable()) {
-            GameObject radar = GameObject.FindWithTag("Radar");
-            radar.SendMessage("DestroyUnit", unit);
-            List<GameObject> enemies = new List<GameObject>();
-            // Send enemies to controller killed by explosion.
-            foreach (GameObject enemy in GameObject.FindGameObjectsWithTag("Enemy")) {
-                if (this.level.GetUnit(this.PositionToMatrix(enemy.transform.position)) == unit) {
-                    enemy.SendMessage("Death");
-                    enemies.Add(enemy);
+        GameObject player = GameObject.FindWithTag("Player");
+        Unit playerUnit = this.GetUnit(player.transform.position);
+        if (playerUnit == unit) {
+            // kill the player
+            player.SendMessage("Death", false);
+        } else {
+            if (unit.IsEnable()) {
+                GameObject radar = GameObject.FindWithTag("Radar");
+                radar.SendMessage("DestroyUnit", unit);
+                List<GameObject> enemies = new List<GameObject>();
+                // Send enemies to controller killed by explosion.
+                foreach (GameObject enemy in GameObject.FindGameObjectsWithTag("Enemy")) {
+                    if (this.level.GetUnit(this.PositionToMatrix(enemy.transform.position)) == unit) {
+                        enemy.SendMessage("Death");
+                        enemies.Add(enemy);
+                    }
                 }
-            }
-            GameObject controller = GameObject.FindWithTag("GameController");
-            controller.SendMessage("DestroyEnemy", enemies);
-        } 
+                GameObject controller = GameObject.FindWithTag("GameController");
+                controller.SendMessage("DestroyEnemy", enemies);
+            } 
+        }
     }
     
     public void BombRoute (Route route) {
