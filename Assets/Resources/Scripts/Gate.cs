@@ -17,7 +17,7 @@ public class Gate : MonoBehaviour {
     private GameObject right = null;
     private bool isOpeaning = false;
 
-    void Start () {
+    void Awake () {
         left = (GameObject)this.gameObject.transform.Find("left").gameObject;
         right = (GameObject)this.gameObject.transform.Find("right").gameObject;
         this.isOpeaning = true;

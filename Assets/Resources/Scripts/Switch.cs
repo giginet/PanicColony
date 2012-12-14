@@ -46,11 +46,11 @@ public class Switch : MonoBehaviour {
        this.SetToggle(!this.toggle); 
     }
     
-    void On () {
+    public void On () {
         this.SetToggle(true);
     }
     
-    void Off () {
+    public void Off () {
         this.SetToggle(false);
     }
     

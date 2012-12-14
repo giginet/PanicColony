@@ -48,7 +48,9 @@ public class BombEnemy : Enemy {
     
     override protected IEnumerator PlayAttackGateMotion (Gate gate) { 
         yield return new WaitForSeconds(3.5f);
-        gate.gameObject.SendMessage("Damage", 10);
+        if (gate != null) {
+            gate.gameObject.SendMessage("Damage", 10);
+        }
     }
     
     private IEnumerator BombRoom () {
@@ -75,6 +77,7 @@ public class BombEnemy : Enemy {
         radar.SendMessage ("DestroyChip", this.gameObject);
         GameObject controller = GameObject.FindWithTag("GameController");
         controller.SendMessage("DestroyEnemy", this.gameObject);
+        this.GetComponent<Exploder>().SendMessage("UpdateRadar");
         this.slip = true;
         this.robot.animation.Play("slip");
         this.gameObject.GetComponent<CharacterController>().radius = 0.01f;

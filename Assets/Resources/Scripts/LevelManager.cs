@@ -154,7 +154,7 @@ public class LevelManager : MonoBehaviour {
                 }
                 if (!ignore) {
                     GameObject enemyPrefab = (GameObject)Resources.Load ("Prefabs/" + prefabName, typeof(GameObject));
-                    GameObject enemy = (GameObject)Instantiate (enemyPrefab, position + Vector3.up * 2, Quaternion.identity);
+                    GameObject enemy = (GameObject)Instantiate (enemyPrefab, position + Vector3.up * 1.5f, Quaternion.identity);
                     enemy.transform.parent = levelObject.transform;
                 }
             }
@@ -484,6 +484,10 @@ public class LevelManager : MonoBehaviour {
                 Switch switchComponent = switchs[c].GetComponentInChildren<Switch>();
                 Gate gateComponent = gates[char.ToUpper(c)].GetComponentInChildren<Gate>();
                 switchComponent.SendMessage("SetGate", gateComponent.gameObject);
+                if (c >= 'n') {
+                    switchComponent.gameObject.SendMessage("On");
+                    gateComponent.gameObject.SendMessage("Close");
+                }
             }
         }
     }

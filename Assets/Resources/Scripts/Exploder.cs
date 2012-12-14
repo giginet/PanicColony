@@ -28,7 +28,7 @@ public class Exploder : MonoBehaviour {
         Destroy(gameObject);
     }
     
-    void UpdateRadar () {
+    public void UpdateRadar () {
         GameObject radar = GameObject.FindWithTag("Radar");
         LevelManager manager = GameObject.FindWithTag("LevelManager").GetComponent<LevelManager>();
         Room room = manager.GetRoom(this.transform.position);
