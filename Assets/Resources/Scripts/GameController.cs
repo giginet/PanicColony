@@ -234,13 +234,17 @@ public class GameController : MonoBehaviour {
     
     IEnumerator Clear () {
         this.state = GameState.Clear;
-        const int count = 10;
+        const int count = 5;
         for (int i = 0; i < count; ++i) {
             this.audio.volume -= this.maxVolume / (float)count;
-            yield return new WaitForSeconds(0.25f);
+            yield return new WaitForSeconds(0.1f);
         }
-        yield return new WaitForSeconds(0.5f);
-        //this.StopMainMusic();
+        this.StopMainMusic();
+        this.audio.volume = this.maxVolume;
+        AudioClip intro = (AudioClip)Resources.Load("Sounds/clear_intro", typeof(AudioClip));
+        this.audio.clip = intro;
+        this.audio.Play();
+        yield return new WaitForSeconds(intro.length - 1.0f);
         GameObject.FindWithTag("Player").SendMessage("SetClearState");
         int sum = 0;
         int remain = 0;
@@ -342,12 +346,15 @@ public class GameController : MonoBehaviour {
     }
     
     IEnumerator PlayMainMusic () {
-        this.audio.clip = (AudioClip)Resources.Load("Sounds/main_intro");
+        AudioClip intro = (AudioClip)Resources.Load("Sounds/main_intro");
+        this.audio.clip = intro;
         this.audio.Play();
         yield return new WaitForSeconds(this.audio.clip.length);
-        this.audio.clip = (AudioClip)Resources.Load("Sounds/main_loop");
-        this.audio.loop = true;
-        this.audio.Play();
+        if (this.audio.clip == intro) {
+            this.audio.clip = (AudioClip)Resources.Load("Sounds/main_loop");
+            this.audio.loop = true;
+            this.audio.Play();
+        }
     }
     
     void StopMainMusic () {
