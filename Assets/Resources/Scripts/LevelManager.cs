@@ -142,9 +142,13 @@ public class LevelManager : MonoBehaviour {
                 GameObject player = (GameObject)Instantiate(prefab, position + Vector3.up, Quaternion.identity);
                 player.transform.parent = levelObject.transform;
                 this.level.AddStartPoint(p);
-            } else if (c == '!' || c == '?') {
+            } else if (c == '!' || c == '?' || c == '^') {
                 string prefabName = "enemyPrefab";
-                if (c == '?') prefabName = "bombEnemyPrefab";
+                if (c == '?') {
+                    prefabName = "bombEnemyPrefab";
+                } else if (c == '^') {
+                    prefabName = "bossPrefab";
+                }
                 bool ignore = false;
                 foreach (Enemy enemy in ignoreEnemies) {
                     if (enemy.GetInitialPosition() == p) {

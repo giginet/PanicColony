@@ -162,8 +162,10 @@ public class Player : MonoBehaviour {
             this.deathTimer += Time.deltaTime;
             this.head.transform.Rotate (Vector3.right * (1.0f - deathTimer / 2.9f) * 120); 
         }
-        if (this.transform.position.y < -1 && this.state != PlayerState.DeathAnimation && this.state != PlayerState.Death) {
-            this.Death (false);
+        if (this.transform.position.y < -1 && this.state == PlayerState.Normal) {
+            if (GameObject.FindWithTag("GameController").GetComponent<GameController>().GetState() == GameController.GameState.Main) {
+                this.Death (false);
+            }
         }
     }
     
@@ -192,6 +194,9 @@ public class Player : MonoBehaviour {
         this.state = PlayerState.DeathAnimation;
         this.audio.volume = 0;
         this.SetControl (false);
+        if (!damage) {
+            this.GetComponent<JoyStickController>().enabled = false;
+        }
         StartCoroutine(this.Miss());
     }
     

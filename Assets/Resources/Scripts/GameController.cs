@@ -42,7 +42,8 @@ public class GameController : MonoBehaviour {
         Miss,
         GameOver,
         Clear,
-        Loading
+        Loading,
+        Pause
     };
 
     void Awake () {
@@ -65,7 +66,7 @@ public class GameController : MonoBehaviour {
         this.destroyedEnemies = new List<Enemy>();
         this.Replay();
     }
-    
+     
     void Update () { 
         if (this.state == GameState.Start) {  
             this.startAnimation.Update();
@@ -202,6 +203,19 @@ public class GameController : MonoBehaviour {
             height = this.continueTexture.height;
             GUI.DrawTexture(new Rect((Screen.width - width) / 2.0f, (Screen.height - height) / 1.2f, width, height), this.continueTexture);
             GUI.color = previous;
+        } else if (this.state == GameState.Pause) {
+        GUIStyle labelStyle = new GUIStyle();
+            labelStyle.fontSize = 64;
+            labelStyle.alignment = TextAnchor.MiddleCenter;
+            labelStyle.normal.textColor = Color.white;
+            GUIStyle shadowLabelStyle = new GUIStyle();
+            shadowLabelStyle.fontSize = 64;
+            shadowLabelStyle.alignment = TextAnchor.MiddleCenter;
+            shadowLabelStyle.normal.textColor = Color.gray;
+            int width = Screen.width;
+            int height = Screen.height;
+            GUI.Label(new Rect(width / 2 - 300 + 3, height / 2 - 200 + 3, 600, 400), "Pause", shadowLabelStyle);
+            GUI.Label(new Rect(width / 2 - 300, height / 2 - 200, 600, 400), "Pause", labelStyle);
         }
    }
    
@@ -234,12 +248,23 @@ public class GameController : MonoBehaviour {
     }
     
     void Miss (int player) {
-        if (this.lives[player] > 0) {
-            this.state = GameState.Miss;
-            this.lives[player] -= 1;
-        } else {
-            this.state = GameState.GameOver;
+        if (this.state == GameState.Main) {
+            if (this.lives[player] > 0) {
+                this.state = GameState.Miss;
+                this.lives[player] -= 1;
+            } else {
+                this.state = GameState.GameOver; 
+                this.StartCoroutine(this.PlayGameOverLoop());
+            }
         }
+    }
+    
+    IEnumerator PlayGameOverLoop () {
+        yield return new WaitForSeconds(1.5f);
+        AudioClip clip = (AudioClip)Resources.Load("Sounds/gameover_loop");
+        this.audio.clip = clip;
+        this.audio.loop = true;
+        this.audio.Play(); 
     }
     
     void NextStage () {
@@ -285,10 +310,6 @@ public class GameController : MonoBehaviour {
         this.NextStage();
     }
     
-    void GameOver () {
-        this.state = GameState.GameOver; 
-    }
-    
     public int GetScore (int player) {
         return this.currentScores[player];
     }
@@ -322,6 +343,10 @@ public class GameController : MonoBehaviour {
             }
             this.DestroyEnemy(enemy);
         }
+    }
+    
+    public GameState GetState () {
+        return this.state;
     }
     
     public void DestroyEnemy (GameObject enemy) { 

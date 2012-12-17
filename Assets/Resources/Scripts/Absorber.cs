@@ -31,9 +31,9 @@ public class Absorber : MonoBehaviour {
             int x = (int)pos.x;
             int y = (int)pos.y;
             if (this.levelManager.GetLevel().IsFloor(x, y + 1)) {
-                controller.Move(Vector3.forward * 10 + Vector3.down * 2); 
+                controller.Move(Vector3.forward * 10); 
             } else {
-                controller.Move(Vector3.back * 10 + Vector3.down * 2); 
+                controller.Move(Vector3.back * 10); 
             }
         } else {
             Vector3 position = this.transform.position;

@@ -127,7 +127,7 @@ public class Level {
     
     public bool IsFloor (int x, int y) {
         char c = this.GetChar(x, y);
-        return (c == '*' || c == '.' || char.IsDigit(c) || c == '!' || c == '?') && !this.IsRoute(x, y) && !this.IsWall(x, y);
+        return (c == '*' || c == '.' || char.IsDigit(c) || c == '!' || c == '?' || c == '^') && !this.IsRoute(x, y) && !this.IsWall(x, y);
     }
     
     public bool IsRoute (int x, int y) {
