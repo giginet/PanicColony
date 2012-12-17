@@ -335,9 +335,9 @@ public class GameController : MonoBehaviour {
             LevelManager manager = this.levelManager.GetComponent<LevelManager>();
             Vector2 pos = manager.GetLevel().GetStartPoint(0);
             GameObject prefab;
-            if (this.currentLevel % 3 == 1) {
+            if (this.currentLevel % 3 == 2) {
                 prefab = (GameObject)Resources.Load("Prefabs/eggplantPrefab", typeof(GameObject));
-            } else if (this.currentLevel % 3 == 2) {
+            } else if (this.currentLevel % 3 == 1) {
                 prefab = (GameObject)Resources.Load("Prefabs/turnipPrefab", typeof(GameObject));
             } else {
                 prefab = (GameObject)Resources.Load("Prefabs/carrotPrefab", typeof(GameObject));

@@ -13,7 +13,8 @@ public class Radar : MonoBehaviour {
     public enum FloorColor {
         Normal,
         Protected,
-        Warning
+        Warning,
+        Start
     };
     
     void Start () {
@@ -63,7 +64,9 @@ public class Radar : MonoBehaviour {
             this.SetUnitColor(route, FloorColor.Protected);
         }
         foreach (Room room in this.level.GetRooms()) {
-            if (room.IsProtect()) {
+            if (this.level.IsStartUnit(room)) {
+                this.SetUnitColor(room, FloorColor.Start);
+            } else if (room.IsProtect()) {
                 this.SetUnitColor(room, FloorColor.Protected);
             }
         }
@@ -158,6 +161,8 @@ public class Radar : MonoBehaviour {
             material = (Material)Resources.Load("Materials/warningFloorRadarMaterial", typeof(Material));
         } else if (color == FloorColor.Protected) {
             material = (Material)Resources.Load("Materials/protectedRoomRadarMaterial", typeof(Material));
+        } else if (color == FloorColor.Start) {
+            material = (Material)Resources.Load("Materials/startRoomRadarMaterial", typeof(Material));
         } else {
             material = (Material)Resources.Load("Materials/floorRadarMaterial", typeof(Material));
         }

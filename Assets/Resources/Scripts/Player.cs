@@ -227,7 +227,7 @@ public class Player : MonoBehaviour {
         this.SetControl(false);
         this.state = PlayerState.Clear;
         JoyStickController controller = this.GetComponent<JoyStickController>();
-        controller.cameraControl.distance = 1.5f;
+        controller.cameraControl.distance = 2.0f;
         controller.cameraControl.height = 0.5f;
         Vector3 angle = controller.GetWantedCameraAngle();
         angle.y = -5;

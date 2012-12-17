@@ -6,7 +6,6 @@ public class Bomb : MonoBehaviour {
 
     void Start () {
         this.animation.Play("setup");
-        this.SendMessage("UpdateRadar"); 
     }
     
     void Update () {
@@ -16,6 +15,7 @@ public class Bomb : MonoBehaviour {
             this.animation.Play("setup");
             this.audio.Play();
             this.ground = true;
+            this.SendMessage("UpdateRadar"); 
         } else if (!this.ground) {
             this.animation.Stop("setup");
         }

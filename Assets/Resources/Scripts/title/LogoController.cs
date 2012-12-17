@@ -34,7 +34,7 @@ public class LogoController : MonoBehaviour {
         GUI.color = color;
         float width = this.logoTexture.width * 0.75f;
         float height = this.logoTexture.height * 0.75f;
-        GUI.DrawTexture(new Rect((Screen.width - width) / 2.0f, (Screen.height - height) / 2.0f, width, height), this.logoTexture, ScaleMode.StretchToFill, true, width / height);
+        GUI.DrawTexture(new Rect((Screen.width - width) / 2.0f - 20, (Screen.height - height) / 2.0f + 20, width, height), this.logoTexture, ScaleMode.StretchToFill, true, 636.0f / 240.0f);
         GUI.color = previous;
     }
 }

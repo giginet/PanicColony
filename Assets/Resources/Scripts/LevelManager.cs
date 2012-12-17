@@ -225,7 +225,7 @@ public class LevelManager : MonoBehaviour {
                         Vector3 center = this.MatrixToPosition(route.GetCenter());
                         GameObject lightPrefab = (GameObject)Resources.Load ("Prefabs/routeLightPrefab", typeof(GameObject));
                         GameObject light = (GameObject)Instantiate (lightPrefab, center + Vector3.up * 3, Quaternion.identity);
-                        if (this.level.IsRoute(x + 1, y) || this.level.IsRoute(x - 1, y)) {
+                        if (this.level.IsRoute((int)center.x, (int)center.y + 1) || this.level.IsRoute((int)center.x, (int)center.y - 1)) {
                             light.transform.Rotate(Vector3.up * 90);
                         }
                         light.transform.parent = levelObject.transform;
@@ -442,11 +442,17 @@ public class LevelManager : MonoBehaviour {
     }
     
     public Room GetRoom (Vector3 position) {
+        if (position.y < 0.0f) {
+            return null;
+        }
         Vector2 p = this.PositionToMatrix (position);
         return this.level.GetRoom(p);
     }
     
     public Unit GetUnit (Vector3 position) {
+        if (position.y < 0.0f) {
+            return null;
+        }
         Vector2 p = this.PositionToMatrix (position);
         return this.level.GetUnit(p);
     }
