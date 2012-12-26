@@ -25,7 +25,13 @@ public class Enemy : MonoBehaviour {
     public enum EnemyAI {
         Normal,
         Wait,
-        Escape
+        Escape,
+        Boss
+    }
+    
+    public enum EnemyType {
+        Worm,
+        Robot
     }
     
     public float normalSpeed = 5.0f;
@@ -33,14 +39,16 @@ public class Enemy : MonoBehaviour {
     public float shockDuration = 3.0f;
     public float rotationSpeed = 2.0f;
     public int score = 1000;
+    public EnemyType type = EnemyType.Worm;
     public EnemyAI ai = EnemyAI.Normal;
     public float attackRange = 1.5f;
     private float shockTime = 0;
     private EnemyActionState actionState = EnemyActionState.Search;
     private EnemyState state = 0;
-    private Vector2 initialPosition;    
+    private Vector2 initialPosition;
     private GameObject worm = null;
     private int stopCount = 0;
+    private bool isWinIntroPlayed = false;
     protected AIPath aiPath;
     protected LevelManager levelManager = null;
     protected Unit lastUnit = null;
@@ -50,9 +58,9 @@ public class Enemy : MonoBehaviour {
         this.levelManager = GameObject.FindWithTag ("LevelManager").GetComponent<LevelManager> ();
         this.initialPosition = this.levelManager.PositionToMatrix (this.transform.position);
         this.aiPath.enabled = false;
-        Transform wormTransform = this.transform.Find("worm");
+        Transform wormTransform = this.transform.Find ("worm");
         if (wormTransform != null) {
-                this.worm = wormTransform.gameObject;
+            this.worm = wormTransform.gameObject;
         }
     }
     
@@ -68,28 +76,28 @@ public class Enemy : MonoBehaviour {
     void AttackGate (Gate gate) {
         if (this.state != EnemyState.Attack) {
             this.state = EnemyState.Attack;
-            StartCoroutine(this.PlayAttackGateMotion(gate));
+            StartCoroutine (this.PlayAttackGateMotion (gate));
         }
     }
     
     virtual protected IEnumerator PlayAttackGateMotion (Gate gate) { 
-        this.worm.animation.Play("attack");
+        this.worm.animation.Play ("attack");
         yield return new WaitForSeconds(this.worm.animation["attack"].length / 1.5f);
         if (gate != null) {
-            gate.gameObject.SendMessage("Damage", 1);
+            gate.gameObject.SendMessage ("Damage", 1);
             this.state = EnemyState.Normal;
         }
     }
     
     protected virtual void Update () {
         if (this.transform.position.y < -10) {
-            this.Death();
+            this.Death ();
         }
         if (this.state == EnemyState.Normal) {
             this.aiPath.enabled = true;
-            if (!this.Attack()) {
-                if (!this.worm.animation.IsPlaying("walk")) {
-                    this.worm.animation.CrossFade("walk");
+            if (!this.Attack ()) {
+                if (!this.worm.animation.IsPlaying ("walk")) {
+                    this.worm.animation.CrossFade ("walk");
                 }
             }
             
@@ -102,11 +110,11 @@ public class Enemy : MonoBehaviour {
                 this.state = EnemyState.Normal;
             }
         } else if (this.state == EnemyState.PlayerDeath) {
-            if (this.worm != null && !this.worm.animation.IsPlaying("win")) {
-                this.worm.animation.CrossFade("win");
+            if (this.worm != null && this.isWinIntroPlayed && !this.worm.animation.IsPlaying ("win_intro")) {
+                this.worm.animation.Play("win_intro");
             }
         }
-        this.ChangeState();
+        this.ChangeState ();
         this.Action ();
         if (this.aiPath.target == null || this.IsNearTarget ()) {
             this.ChangeTarget ();
@@ -118,26 +126,26 @@ public class Enemy : MonoBehaviour {
                 this.ChangeTarget ();
             }
         }
-        Unit currentUnit = this.levelManager.GetUnit(this.transform.position);
-        if (this.lastUnit != null && currentUnit == this.lastUnit ) {
+        Unit currentUnit = this.levelManager.GetUnit (this.transform.position);
+        if (this.lastUnit != null && currentUnit == this.lastUnit) {
             this.stopCount += 1;
             if (this.stopCount > 120) {
-               this.stopCount = 0;
-               this.SetRandomRoom();
-               this.aiPath.TrySearchPath();
+                this.stopCount = 0;
+                this.SetRandomRoom ();
+                this.aiPath.TrySearchPath ();
             }
         }
         this.lastUnit = currentUnit; 
-        this.OnPlayerIsDead(); 
+        this.OnPlayerIsDead (); 
     }
     
     virtual public void OnPlayerIsDead () {
         // win motion (when player is dead.)
         foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
-            if (player.GetComponent<Player>().IsDead() && this.state != EnemyState.PlayerDeathIntro && this.state != EnemyState.PlayerDeathIntro) {
+            if (player.GetComponent<Player> ().IsDead () && this.state != EnemyState.PlayerDeathIntro && this.state != EnemyState.PlayerDeath) {
                 this.state = EnemyState.PlayerDeathIntro;
                 this.aiPath.canMove = false;
-                StartCoroutine(this.PlayWinMotion());
+                StartCoroutine (this.PlayWinMotion ());
             }
         }
     }
@@ -145,9 +153,9 @@ public class Enemy : MonoBehaviour {
     virtual public bool Attack () {
         foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
             if (Vector3.Distance (player.transform.position, this.transform.position) < this.attackRange) {
-                if (this.state != EnemyState.Attack && !this.worm.animation.IsPlaying("attack") && player.GetComponent<Player>().GetPlayerState() == Player.PlayerState.Normal) {
+                if (this.state != EnemyState.Attack && !this.worm.animation.IsPlaying ("attack") && player.GetComponent<Player> ().GetPlayerState () == Player.PlayerState.Normal) {
                     this.state = EnemyState.Attack;
-                    StartCoroutine(this.PlayAttackMotion(player));
+                    StartCoroutine (this.PlayAttackMotion (player));
                     return true;
                 }
             }
@@ -156,38 +164,40 @@ public class Enemy : MonoBehaviour {
     }
     
     IEnumerator PlayAttackMotion (GameObject player) {
-        this.worm.animation.CrossFade("attack"); 
+        this.worm.animation.CrossFade ("attack"); 
         yield return new WaitForSeconds(this.worm.animation["attack"].length / 1.5f);
         if (Vector3.Distance (player.transform.position, this.transform.position) < this.attackRange) {
             player.SendMessage ("Death", true);
-           this.state = EnemyState.PlayerDeathIntro;             
-            StartCoroutine(this.PlayWinMotion());
+            this.state = EnemyState.PlayerDeathIntro;             
+            StartCoroutine (this.PlayWinMotion ());
         }
         this.state = EnemyState.Normal;
     }
     
     virtual protected IEnumerator PlayWinMotion () {
-        this.worm.animation.Play("win_intro");
+        this.worm.animation.Play ("win_intro");
         yield return new WaitForSeconds(this.worm.animation["win_intro"].length);
-        this.state = EnemyState.PlayerDeath;             
+        isWinIntroPlayed = true;
+        this.worm.animation.Stop();
+        this.state = EnemyState.PlayerDeath; 
     }
     
     virtual public void Shock () {
         this.state = EnemyState.Shocking;
-        this.SetActionState(EnemyActionState.Follow);
+        this.SetActionState (EnemyActionState.Follow);
         this.shockTime = 0;
-        this.worm.animation.Stop("walk");
-        this.worm.animation.Stop("attack");
-        this.worm.animation.Stop("win_intro");
-        this.worm.animation.Stop("win");
-        StopCoroutine("PlayAttackMotion");
-        StopCoroutine("PlayGateAttackMotion");
+        this.worm.animation.Stop ("walk");
+        this.worm.animation.Stop ("attack");
+        this.worm.animation.Stop ("win_intro");
+        this.worm.animation.Stop ("win");
+        StopCoroutine ("PlayAttackMotion");
+        StopCoroutine ("PlayGateAttackMotion");
     }
     
     virtual public void Death () {
         Destroy (this.gameObject); 
-        GameObject controller = GameObject.FindWithTag("GameController");
-        controller.SendMessage("DestroyEnemy", this.gameObject);
+        GameObject controller = GameObject.FindWithTag ("GameController");
+        controller.SendMessage ("DestroyEnemy", this.gameObject);
     }
     
     private void ChangeState () {
@@ -198,14 +208,22 @@ public class Enemy : MonoBehaviour {
                 this.aiPath.speed = 0;
                 GameObject player = this.GetSameUnitPlayer ();
                 if (player != null) {
-                    this.SetActionState(EnemyActionState.Search);
+                    this.SetActionState (EnemyActionState.Search);
                 }
             }
         } else if (this.ai == EnemyAI.Escape) {
-            GameObject player = this.GetNearestPlayer();
-            Unit playerUnit = this.levelManager.GetUnit(player.transform.position); 
-            if (playerUnit == this.levelManager.GetUnit(this.transform.position)) {
-                this.SetActionState(EnemyActionState.Escape);
+            GameObject player = this.GetNearestPlayer ();
+            Unit playerUnit = this.levelManager.GetUnit (player.transform.position); 
+            if (playerUnit == this.levelManager.GetUnit (this.transform.position)) {
+                this.SetActionState (EnemyActionState.Escape);
+            }
+        } else if (this.ai == EnemyAI.Boss) {
+            GameObject player = this.GetSameUnitPlayer ();
+            if (player == null) {
+                this.actionState = EnemyActionState.Wait;
+                this.ChangeTarget ();
+            } else {
+                this.actionState = EnemyActionState.Follow;
             }
         }
     }
@@ -215,7 +233,7 @@ public class Enemy : MonoBehaviour {
             this.aiPath.speed = this.normalSpeed;
             GameObject player = this.GetSameUnitPlayer ();
             if (player != null) {
-                this.SetActionState(EnemyActionState.Follow);
+                this.SetActionState (EnemyActionState.Follow);
             }
         } else if (this.actionState == EnemyActionState.Follow) {
             this.aiPath.speed = this.fastSpeed;
@@ -223,18 +241,18 @@ public class Enemy : MonoBehaviour {
             if (player != null) {
                 if (Vector3.Distance (this.transform.position, player.transform.position) > 100) {
                     this.actionState = EnemyActionState.Search;                
-                    this.SetActionState(EnemyActionState.Search);
+                    this.SetActionState (EnemyActionState.Search);
                 } else {
                     this.aiPath.target = player.transform;
                 }
             }
         } else if (this.actionState == EnemyActionState.Escape) {
-            GameObject player = this.GetNearestPlayer();
-            Unit playerUnit = this.levelManager.GetUnit(player.transform.position);
-            if (playerUnit == this.levelManager.GetUnit(this.transform.position)) {
+            GameObject player = this.GetNearestPlayer ();
+            Unit playerUnit = this.levelManager.GetUnit (player.transform.position);
+            if (playerUnit == this.levelManager.GetUnit (this.transform.position)) {
                 this.aiPath.speed = this.fastSpeed;
-                if (this.aiPath.target && playerUnit == this.levelManager.GetUnit(this.aiPath.target.position)) {
-                    this.SetRandomRoom();
+                if (this.aiPath.target && playerUnit == this.levelManager.GetUnit (this.aiPath.target.position)) {
+                    this.SetRandomRoom ();
                 }
             }
         }
@@ -242,16 +260,21 @@ public class Enemy : MonoBehaviour {
     
     private void SetActionState (EnemyActionState aState) {
         this.actionState = aState;
-        this.ChangeTarget();
+        this.ChangeTarget ();
     }
      
     private void ChangeTarget () {
         GameObject[] players = GameObject.FindGameObjectsWithTag ("Player");
         if (this.actionState == EnemyActionState.Follow) {
             this.aiPath.target = this.GetNearestPlayer ().transform;
-            this.aiPath.TrySearchPath();
+            this.aiPath.TrySearchPath ();
         } else if (this.actionState == EnemyActionState.Search) {
             this.SetRandomRoom ();
+        } else if (this.actionState == EnemyActionState.Wait) {
+            Unit unit = this.levelManager.GetUnit (this.transform.position);
+            Vector2 center = unit.GetCenter ();
+            GameObject target = this.levelManager.GetLevel ().GetObject (center);
+            this.aiPath.target = target.transform;
         }
     }
     

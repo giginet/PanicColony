@@ -3,8 +3,16 @@ using System.Collections;
 
 [RequireComponent (typeof (AudioSource))]
 public class Item : MonoBehaviour {
+
+    public enum VegetableType {
+        Eggplant,
+        Carrot,
+        Turnip
+    }
+    
     public float rotateSpeed = 1.0f;
     public int baseScore = 500;
+    public VegetableType type = VegetableType.Eggplant;
 
     // Use this for initialization
     void Start () {

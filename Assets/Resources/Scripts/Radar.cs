@@ -73,14 +73,14 @@ public class Radar : MonoBehaviour {
     }
     
     private void UpdateChip () {
-        string[] tags = {"Player", "Enemy", "Bomb", "Shutter", "Gate", "Switch", "BrokenWall", "Absorber", "Vegetable"};
+        string[] tags = {"Player", "Enemy", "Bomb", "Gate", "Switch", "BrokenWall", "Absorber", "Vegetable"};
         GameObject levelObject = this.levelManager.GetLevelObject();
         foreach (string name in tags) {
             foreach (GameObject obj in GameObject.FindGameObjectsWithTag(name)) {
                 if (chips.ContainsKey(obj)) {
                     GameObject chip = this.chips[obj];
                     chip.transform.localPosition = levelObject.transform.TransformPoint(obj.transform.position) / this.levelManager.WIDTH;
-                    if (name == "Player" || name == "Enemy") {
+                    if (name == "Player") {
                         chip.transform.localRotation = obj.transform.localRotation;
                     }
                     if (name == "Gate") {
@@ -88,8 +88,29 @@ public class Radar : MonoBehaviour {
                         chip.renderer.enabled = !gate.IsOpen();
                     }
                 } else {
-                    string camel = char.ToLower(name[0]) + name.Substring(1, name.Length - 1);
-                    GameObject prefab = (GameObject)Resources.Load("Prefabs/Radar/" + camel + "RadarPrefab", typeof(GameObject));
+                    string prefabName;
+                    if (name == "Enemy") {
+                        Enemy enemy = obj.GetComponent<Enemy>();
+                        if (enemy == null) continue;
+                        if (enemy.type == Enemy.EnemyType.Robot) {
+                            prefabName = "robot";
+                        } else {
+                            prefabName = "worm";
+                        }
+                    } else if (name == "Vegetable") {
+                        Item item = obj.GetComponent<Item>();
+                        if (item == null) continue;
+                        if (item.type == Item.VegetableType.Eggplant) {
+                            prefabName = "eggplant";
+                        } else if (item.type == Item.VegetableType.Carrot) {
+                            prefabName = "carrot";
+                        } else {
+                            prefabName = "turnip";
+                        }
+                    } else {
+                        prefabName = char.ToLower(name[0]) + name.Substring(1, name.Length - 1);
+                    }
+                    GameObject prefab = (GameObject)Resources.Load("Prefabs/Radar/" + prefabName + "RadarPrefab", typeof(GameObject));
                     this.AddChip(obj, prefab);
                 }
                 
@@ -119,6 +140,7 @@ public class Radar : MonoBehaviour {
     }
     
     private void AddChip (GameObject obj, GameObject prefab) {
+        if (prefab == null) return;
         GameObject chip = (GameObject)Instantiate(prefab, Vector3.zero, Quaternion.identity);
         chip.transform.parent = this.transform;
         chip.transform.localPosition = obj.transform.localPosition / levelManager.WIDTH; 

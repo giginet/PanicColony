@@ -197,7 +197,7 @@ public class Player : MonoBehaviour {
         if (!damage) {
             this.GetComponent<JoyStickController>().enabled = false;
         }
-        StartCoroutine(this.Miss());
+        StartCoroutine(this.Miss(damage));
     }
     
     void DestroyBody () {
@@ -246,12 +246,13 @@ public class Player : MonoBehaviour {
         this.animation.Play("clear");
     }
     
-    IEnumerator Miss () {
+    IEnumerator Miss (bool damage) {
         yield return new WaitForSeconds(2.9f);
         this.state = PlayerState.Death;
         this.DestroyBody ();
         GameObject controller = GameObject.FindWithTag ("GameController");
         controller.SendMessage ("Miss", this.playerNumber);
+        controller.SendMessage ("SetDeathType", damage ? GameController.DeathType.Broken : GameController.DeathType.OuterSpace);
         this.SetControl(false);
         this.deathTimer = 0.0f;
     }

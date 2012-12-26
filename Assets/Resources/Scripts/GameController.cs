@@ -3,7 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class GameController : MonoBehaviour {
-
+ 
+    public enum DeathType {
+        Broken,
+        OuterSpace
+    };
+    
     public int initialLevel = 1;
     public int initialLife = 3;
     public int vegetableBorder = 3;
@@ -23,11 +28,15 @@ public class GameController : MonoBehaviour {
     private float timer = 0;
     private Animation2D startAnimation;
     private List<Enemy> destroyedEnemies; 
+    private DeathType deathType = DeathType.Broken;
     
     private Texture2D scoreLabelTexture = null;
     private Texture2D stageLabelTexture = null;
     private Texture2D lifeTexture = null;
     private Texture2D continueTexture = null;
+    private Texture2D gameOverTexture = null;
+    private Texture2D brokenTexture = null;
+    private Texture2D outerTexture = null;
     private NumberTexture scoreNumberTexture = null;
     private NumberTexture stageNumberTexture = null;
     private TutorialWindow tutorialWindow = null;
@@ -49,6 +58,9 @@ public class GameController : MonoBehaviour {
     void Awake () {
         this.scoreLabelTexture = (Texture2D)Resources.Load("UI/score");
         this.stageLabelTexture = (Texture2D)Resources.Load("UI/stage");
+        this.gameOverTexture = (Texture2D)Resources.Load("UI/gameover");
+        this.brokenTexture = (Texture2D)Resources.Load("UI/broken");
+        this.outerTexture = (Texture2D)Resources.Load("UI/outer");
         this.lifeTexture = (Texture2D)Resources.Load ("UI/life");
         this.continueTexture = (Texture2D)Resources.Load ("UI/continue");
         this.scoreNumberTexture = new NumberTexture("UI/numbers", 37, 50);
@@ -175,25 +187,21 @@ public class GameController : MonoBehaviour {
             float alpha = 1.0f;
             alpha = 0.25f + Mathf.PingPong(Time.time / 2.0f, 0.75f);
             Color previous = GUI.color;
-            Color color = new Color(previous.r, previous.g, previous.b, alpha);
-            GUI.color = color;
             int width = this.continueTexture.width;
             int height = this.continueTexture.height;
-            GUI.DrawTexture(new Rect((Screen.width - width) / 2.0f, (Screen.height - height) / 1.2f, width, height), this.continueTexture);
+            if (this.deathType == DeathType.Broken) {
+                GUI.DrawTexture(new Rect((Screen.width - width) / 2.0f, (Screen.height - height) / 4.0f, width, height), this.brokenTexture);
+            } else {
+                GUI.DrawTexture(new Rect((Screen.width - width) / 2.0f, (Screen.height - height) / 4.0f, width, height), this.outerTexture);
+            }
+            Color color = new Color(previous.r, previous.g, previous.b, alpha);
+            GUI.color = color;
+            GUI.DrawTexture(new Rect((Screen.width - width) / 1.2f, (Screen.height - height) / 1.2f, width, height), this.continueTexture);
             GUI.color = previous;
-        } else if (this.state == GameState.GameOver) {
-            GUIStyle labelStyle = new GUIStyle();
-            labelStyle.fontSize = 64;
-            labelStyle.alignment = TextAnchor.MiddleCenter;
-            labelStyle.normal.textColor = Color.white;
-            GUIStyle shadowLabelStyle = new GUIStyle();
-            shadowLabelStyle.fontSize = 64;
-            shadowLabelStyle.alignment = TextAnchor.MiddleCenter;
-            shadowLabelStyle.normal.textColor = Color.gray;
-            int width = Screen.width;
-            int height = Screen.height;
-            GUI.Label(new Rect(width / 2 - 300 + 3, height / 2 - 200 + 3, 600, 400), "Game Over", shadowLabelStyle);
-            GUI.Label(new Rect(width / 2 - 300, height / 2 - 200, 600, 400), "Game Over", labelStyle);
+        } else if (this.state == GameState.GameOver) { 
+            int width = this.gameOverTexture.width;
+            int height = this.gameOverTexture.height;
+            GUI.DrawTexture(new Rect((Screen.height - width) / 2 , (Screen.height - height) / 2, width, height), this.gameOverTexture);
             float alpha = 1.0f;
             alpha = 0.25f + Mathf.PingPong(Time.time / 2.0f, 0.75f);
             Color previous = GUI.color;
@@ -412,5 +420,9 @@ public class GameController : MonoBehaviour {
         this.audio.Stop();
         this.audio.clip = null; 
         this.audio.loop = false;
+    }
+    
+    void SetDeathType (DeathType type) {
+        this.deathType = type;
     }
 }
